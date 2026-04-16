@@ -76,15 +76,15 @@
 
 |브랜치 명 | 설명                   |담당              |역할   |
 | ----------- | -------------------- | ------------------------ | ---------------- |
-| `main`      | 🚀 최종 브랜치 (결과물 상태) |백승우|프로젝트 무결적 결과물|
-| `backend/main`       | 🔧 backend 메인 통합 브랜치         |백승우| backend 무결 결과물|
-| `backend/auth`       | 🔧 backend 인증/회원 브랜치         |백승우| 인증/회원 db, api 구현|
-| `backend/AIapi`       | 🔧 backend ai 기능 브랜치         |백승우| AI 추천 db, api 구현 / openAI 활용 내부 api 구현|
-| `backend/eventdbapi`       | 🔧 backend 공공 데이터 브랜치         |백승우| 공공데이터 db 동기화 내부 api 구현|
-| `backend/database`       | 🔧 backend DB init 브랜치         |백승우| 프로젝트 DB database(세팅) 구현 |
+| `main`      | 🚀 최종 브랜치 (결과물 상태) | 백승우 |프로젝트 무결적 결과물|
+| `backend/main`       | 🔧 backend 메인 통합 브랜치         | 백승우 | backend 무결 결과물|
+| `backend/auth`       | 🔧 backend 인증/회원 브랜치         | 백승우 | 인증/회원 db, api 구현|
+| `backend/AIapi`       | 🔧 backend ai 기능 브랜치         | 백승우 | AI 추천 db, api 구현 / openAI 활용 내부 api 구현|
+| `backend/eventdbapi`       | 🔧 backend 공공 데이터 브랜치         | 백승우 | 공공데이터 db 동기화 내부 api 구현|
+| `backend/database`       | 🔧 backend DB init 브랜치         | 백승우 | 프로젝트 DB database(세팅) 구현 |
 | `backend/event`       | 🔧 backend 행사 정보 관련 기능 브랜치         | | 행사 정보 관련 기능 db, api 구현 |
 | `backend/useraction`       | 🔧 backend 유저 행동관련 정보 브랜치(리뷰, 좋아요, 북마크)    |  | 리뷰, 좋아요, 북마크 정보 관련 기능 db, api 구현 |
-| `frontend/main` | ✨ frontend 메인 통합 브랜치             |박건일|frontend 무결 결과물 |
+| `frontend/main` | ✨ frontend 메인 통합 브랜치             | 박건일 |frontend 무결 결과물 |
 
 ---
 
