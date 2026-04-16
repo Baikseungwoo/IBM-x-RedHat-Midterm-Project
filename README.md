@@ -92,7 +92,7 @@
 
 * 모든 작업은 `*/main` 브랜치에서 각 팀장이 병합
 * 각자 작업은 항상 각자의 브랜치에서만 커밋 푸쉬
-* 작업을 시작할때 항상 각자의 브랜치에 */main 브랜치 내용 pull하고 작업하기 (ex. 만약 백엔드 브랜치인 경우 -> git pull origin backend/main )
+* 작업을 시작할때 항상 각자의 브랜치에 */main 브랜치 내용 pull하고 작업하기 (ex. 만약 백엔드 브랜치인 경우 -> `git pull origin backend/main` )
 * 본인 담당 작업이 완료되면 본인 브랜치에 푸쉬한 후 backend/main 또는 frontend/main에 pull request 보내기(팀원들에게 보고 후)
 * 최종 프로젝트 → `main` merge
 * main 브랜치는 담당자 말고는 건들지 말것
