@@ -1,9 +1,11 @@
-from fastapi import Request, Response, HTTPException
+from fastapi import Request, Response, HTTPException, Security
 from jwt import ExpiredSignatureError, InvalidTokenError
 from app.core.settings import settings
 from app.core.jwt_handle import verify_token
 from typing import Optional
+from fastapi.security import APIKeyCookie
 
+access_cookie_scheme = APIKeyCookie(name="access_token", auto_error=False)
 
 #JWT토큰을 쿠키로 설정
 #samesite="Lax" : 외부 도메인 요청 시 쿠키 전송 제한됨
@@ -27,14 +29,13 @@ def set_auth_cookies(response:Response, access_token:str, refresh_token:str) -> 
 
 #사용자 쿠키에 액세스 토큰여부 확인
 # 토큰 검증
-async def get_user_id(request:Request) -> int:
-    access_token=request.cookies.get("access_token")
-    if not access_token:
+async def get_user_id(request:Request, access_token: str | None = Security(access_cookie_scheme)) -> int:
+    token = access_token or request.cookies.get("access_token")
+    if not token:
         raise HTTPException(status_code=401, detail="Access_token missing")
-    
-    #정상적인 토큰이면 사용자 id반환
+
     try:
-        user_id=verify_token(access_token)
+        user_id = verify_token(token)
         if user_id is None:
             raise HTTPException(status_code=401, detail="no uid")
         return user_id
