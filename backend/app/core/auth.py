@@ -30,7 +30,12 @@ def set_auth_cookies(response:Response, access_token:str, refresh_token:str) -> 
 #사용자 쿠키에 액세스 토큰여부 확인
 # 토큰 검증
 async def get_user_id(request:Request, access_token: str | None = Security(access_cookie_scheme)) -> int:
-    token = access_token or request.cookies.get("access_token")
+    token = (
+        getattr(request.state, "access_token_override", None)
+        or access_token
+        or request.cookies.get("access_token")
+    )
+
     if not token:
         raise HTTPException(status_code=401, detail="Access_token missing")
 
