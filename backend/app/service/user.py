@@ -24,6 +24,11 @@ from app.db.scheme.user import (
     FindEmailRequest,
     MeUpdateRequest,
 )
+from pathlib import Path
+
+DEFAULT_IMAGE_PATH = Path("app/assets/default_profile.png")
+DEFAULT_IMAGE_BYTES = DEFAULT_IMAGE_PATH.read_bytes()
+
 
 
 def _decode_image_data(image_data: str | None) -> bytes | None:
@@ -65,7 +70,12 @@ async def signup_service(
         raise HTTPException(status_code=409, detail="Nickname already exists")
 
     hashed_pw = get_password_hash(payload.password)
-    image_bytes = _decode_image_data(payload.image_data)
+
+    if payload.image_data is None:
+        image_bytes = DEFAULT_IMAGE_BYTES
+    else:
+        image_bytes = _decode_image_data(payload.image_data)
+
 
     user = await create_user(
         db=db,
@@ -141,7 +151,13 @@ async def update_me_service(
     if nickname_owner and nickname_owner.user_id != user.user_id:
         raise HTTPException(status_code=409, detail="Nickname already exists")
 
-    image_bytes = _decode_image_data(payload.image_data)
+    if payload.image_data is None:
+        image_bytes = user.image_data
+    elif payload.image_data == "":
+        image_bytes = DEFAULT_IMAGE_BYTES
+    else:
+        image_bytes = _decode_image_data(payload.image_data)
+
 
     updated = await update_user_me(
         db=db,
