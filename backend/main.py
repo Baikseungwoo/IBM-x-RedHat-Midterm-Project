@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db.database import Base, async_engine
 from fastapi.concurrency import asynccontextmanager
 from dotenv import load_dotenv
+from app.router.auth import router as auth_router
+from app.router.user import router as user_router
+from app.middleware.token_refresh import TokenRefreshMiddleware
 
 
 load_dotenv(dotenv_path=".env")
@@ -26,6 +29,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(TokenRefreshMiddleware)
+
+# 라우터 등록
+app.include_router(auth_router)
+app.include_router(user_router)
 
 
 if __name__=="__main__":
