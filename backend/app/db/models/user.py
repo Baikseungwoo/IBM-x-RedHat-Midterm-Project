@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, func
 from sqlalchemy.dialects.mysql import LONGBLOB
+from sqlalchemy.orm import relationship
 from app.db.database import Base
 
 class User(Base):
@@ -12,3 +13,8 @@ class User(Base):
     refresh_token = Column(String(255), nullable=False, default="")
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     image_data = Column(LONGBLOB, nullable=True)
+
+
+    reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
+    likes = relationship("Like", back_populates="user", cascade="all, delete-orphan")
+    bookmarks = relationship("Bookmark", back_populates="user", cascade="all, delete-orphan")
