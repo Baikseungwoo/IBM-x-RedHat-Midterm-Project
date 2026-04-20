@@ -32,7 +32,7 @@ const EventCard = ({ event, onClick }) => {
     fetchStatus();
   }, [event.content_id]);
 
-  // ❤️ 좋아요 토글
+  //좋아요 토글
   const handleLike = async (e) => {
     e.stopPropagation();
 
@@ -46,7 +46,7 @@ const EventCard = ({ event, onClick }) => {
     }
   };
 
-  // 🔖 북마크 토글
+  //북마크 토글
   const handleBookmark = async (e) => {
     e.stopPropagation();
 
