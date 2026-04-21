@@ -3,7 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('search bar');
+  const [isModalOpen, setIsModalOpen] = useState(false); 
   const navigate = useNavigate();
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -16,23 +19,33 @@ const Header = () => {
     setSearchQuery('');
   };
 
+  const handleProfileClick = (e) => {
+    e.preventDefault(); 
+    
+    if (!isLoggedIn) {
+      alert("로그인이 필요한 서비스입니다.");
+      navigate('/login');
+    } else {
+      setIsModalOpen(!isModalOpen);
+    }
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setIsModalOpen(false);
+    alert("로그아웃 되었습니다.");
+    navigate('/');
+  };
+
   return (
     <header className="w-full bg-white border-b border-gray-200 sticky top-0 z-50">
-      {/* [변경 포인트] 
-          1. max-w-7xl (약 1280px)을 설정하여 너무 양 끝으로 벌어지지 않게 막음 
-          2. mx-auto로 중앙 정렬
-      */}
       <div className="max-w-[1440px] mx-auto px-10 h-16 flex items-center justify-between">
         
-        {/* --- [왼쪽 그룹] 로고 + 검색창 + 메뉴 --- */}
         <div className="flex items-center space-x-12">
-          
-          {/* 1. 로고 (GIUT) */}
           <Link to="/" className="flex-shrink-0">
             <span className="text-3xl font-bold text-gray-900 tracking-tight text-[32px]">GIUT</span>
           </Link>
 
-          {/* 2. 검색창 */}
           <form onSubmit={handleSearch} className="relative hidden lg:block">
             <div className="flex items-center">
               <input
@@ -63,18 +76,18 @@ const Header = () => {
             </div>
           </form>
 
-          {/* 3. 메뉴 (검색창 옆 배치) */}
           <nav className="hidden md:flex items-center space-x-10 text-base font-medium text-gray-800">
             <Link to="/recommend" className="hover:text-blue-600 transition-colors whitespace-nowrap">여행 코스 AI 추천</Link>
             <Link to="/events" className="hover:text-blue-600 transition-colors whitespace-nowrap">행사 목록</Link>
           </nav>
         </div>
 
-        {/* --- [오른쪽 그룹] 로그인 + 알림 + 프로필 --- */}
         <div className="flex items-center space-x-6 flex-shrink-0">
-          <Link to="/login" className="text-base font-medium text-gray-800 hover:text-blue-600 mr-2">
-            로그인
-          </Link>
+          {!isLoggedIn && (
+            <Link to="/login" className="text-base font-medium text-gray-800 hover:text-blue-600 mr-2">
+              로그인
+            </Link>
+          )}
 
           <button className="relative w-12 h-10 bg-[#E9E9E9] rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -83,11 +96,36 @@ const Header = () => {
             <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
           </button>
 
-          <Link to="/mypage" className="hover:opacity-80 transition-opacity text-gray-800">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-            </svg>
-          </Link>
+          <div className="relative">
+            <button 
+              onClick={handleProfileClick}
+              className="hover:opacity-80 transition-opacity text-gray-800 flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className={`h-10 w-10 ${isLoggedIn ? 'text-blue-600' : 'text-gray-800'}`} viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+              </svg>
+            </button>
+
+            {isLoggedIn && isModalOpen && (
+              <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-[100] py-2">
+                <div className="px-4 py-2 border-b border-gray-100 mb-1">
+                  <p className="text-xs text-gray-400 font-medium">관리자님</p>
+                </div>
+                <button 
+                  onClick={() => { navigate('/mypage'); setIsModalOpen(false); }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  마이페이지
+                </button>
+                <button 
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  로그아웃
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
       </div>

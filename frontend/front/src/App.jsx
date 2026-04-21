@@ -11,6 +11,9 @@ import EventList from './pages/EventList/EventList';
 import EventDetail from './pages/EventDetail/EventDetail';
 import RecommendPage from './pages/RecommedPage/RecommedPage'; 
 import './App.css';
+import AboutPage from './pages/AboutPage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
 
 function App() {
   return (
@@ -27,6 +30,9 @@ function App() {
             <Route path="/events" element={<EventList />} />
             <Route path="/events/:id" element={<EventDetail />} />
             <Route path="/recommend" element={<RecommendPage />} />
+            <Route path="/about" element={<AboutPage /> } />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
           </Routes>
         </main>
 

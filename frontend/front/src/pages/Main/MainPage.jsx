@@ -2,38 +2,52 @@ import React from 'react';
 
 const MainPage = () => {
   return (
-    // bg-gradient-to-br을 사용하여 왼쪽 상단에서 오른쪽 하단으로 바다 색감이 흐르도록 설정
     <div className="w-full min-h-screen bg-gradient-to-br from-[#E0F2FE] via-[#BAE6FD] to-[#7DD3FC] overflow-x-hidden">
       
-      {/* --- 상단 히어로 섹션 --- */}
-      <section className="max-w-[1700px] mx-auto flex flex-col lg:flex-row items-stretch justify-between relative">
+      <section className="w-full pt-10 pb-6 px-10">
+        <div className="max-w-[1440px] mx-auto">
+          <h2 className="text-sm font-bold text-[#0369A1] mb-4 ml-2 opacity-80 text-center md:text-left">현재 인기 행사들</h2>
+          <div className="flex justify-center md:justify-between items-center gap-6 overflow-x-auto pb-4 no-scrollbar">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="min-w-[200px] flex-1 bg-white/40 backdrop-blur-sm rounded-2xl p-1 border border-white/30 shadow-lg group cursor-pointer hover:bg-white/60 transition-all">
+                <div className="aspect-[16/9] bg-white/80 rounded-xl mb-1 shadow-inner overflow-hidden">
+                  <div className="w-full h-full bg-gray-200 group-hover:scale-105 transition-transform"></div>
+                </div>
+                <div className="h-8 w-full px-2 flex items-center">
+                  <div className="h-2 w-3/4 bg-[#0369A1]/20 rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-[1600px] mx-auto flex flex-col lg:flex-row items-start justify-between relative px-10 py-10">
         
-        {/* [왼쪽 영역] 텍스트 및 인기박스 */}
-        <div className="w-full lg:w-[30%] px-10 pt-20 pb-10 z-10">
-          <div className="space-y-6 mb-12">
-            <h1 className="text-[40px] font-extrabold text-[#0369A1] leading-[1.2] tracking-tight">
+        <div className="w-full lg:w-[35%] z-10 space-y-10">
+          <div className="space-y-4">
+            <h1 className="text-[36px] font-extrabold text-[#0369A1] leading-[1.2] tracking-tight">
               어디로 가야 할지<br />
               고민될 때, GIUT
             </h1>
-            <p className="text-[#075985] text-xl font-medium leading-relaxed opacity-80">
+            <p className="text-[#075985] text-lg font-medium opacity-80">
               지도의 지역을 클릭하여<br />
-              축제 리스트를 바로 확인하세요!
+              축제 리스트를 확인하세요!
             </p>
           </div>
 
-          {/* 인기 여행지 TOP 3 (바다 배경에 어울리게 약간 투명한 느낌 추가) */}
-          <div className="bg-white/60 backdrop-blur-md rounded-[32px] p-8 w-full max-w-[360px] shadow-xl shadow-blue-900/10 border border-white/50">
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="font-bold text-xl text-[#0369A1]">인기 여행지 TOP 3</h3>
-              <button className="text-sm text-blue-400 hover:text-blue-600 font-bold">더보기 &gt;</button>
+          <div className="bg-white/70 backdrop-blur-lg rounded-[40px] p-10 w-full shadow-2xl border border-white/60">
+            <div className="flex justify-between items-center mb-10">
+              <h3 className="font-bold text-[24px] text-[#0369A1]">인기 여행지 TOP 3</h3>
+              <button className="text-sm text-blue-500 hover:text-blue-700 font-bold border-b-2 border-blue-200">더보기 &gt;</button>
             </div>
             
-            <div className="space-y-5">
+            <div className="space-y-6">
               {[1, 2, 3].map((item) => (
-                <div key={item} className="flex h-24 bg-white rounded-2xl overflow-hidden shadow-sm hover:scale-[1.03] transition-all border border-blue-50">
-                  <div className="w-2/5 bg-blue-100/50"></div>
-                  <div className="w-3/5 p-4 flex items-center justify-center">
-                    <span className="text-blue-300 font-bold tracking-widest text-sm uppercase">Loading</span>
+                <div key={item} className="flex h-48 bg-white rounded-[24px] overflow-hidden shadow-md hover:scale-[1.04] transition-all border border-blue-50 group cursor-pointer">
+                  <div className="w-2/5 bg-blue-100 group-hover:bg-blue-200 transition-colors"></div>
+                  <div className="w-3/5 p-6 flex items-center justify-center">
+                    <span className="text-blue-400 font-black tracking-widest text-lg opacity-40 uppercase italic">Rank {item}</span>
                   </div>
                 </div>
               ))}
@@ -41,42 +55,16 @@ const MainPage = () => {
           </div>
         </div>
 
-        {/* [오른쪽 영역] 지도 이미지 (바다 위 둥둥 뜨는 효과) */}
-        <div className="w-full lg:w-[70%] flex items-end justify-end pt-6 relative">
-          <div className="w-full h-full flex justify-end items-end pr-4 pb-4">
-            {/* 지도에 그림자(drop-shadow)를 주어 바다 위에 떠 있는 입체감을 부여 */}
-            <img 
+        <div className="w-full lg:w-[60%] flex items-center justify-center lg:justify-end pt-10">
+          <div className="relative w-full max-w-[900px] flex justify-center items-center">
+          <img 
               src="/map.png" 
               alt="Korea Map" 
-              className="w-full h-auto object-contain max-w-[1100px] drop-shadow-[0_35px_35px_rgba(3,105,161,0.25)]"
+              className="w-full h-auto object-contain drop-shadow-[0_25px_25px_rgba(3,105,161,0.2)] hover:drop-shadow-[0_35px_35px_rgba(3,105,161,0.3)] transition-all duration-500"
               onError={(e) => {
-                e.target.src = "https://via.placeholder.com/1000x800?text=Map+Image";
+                e.target.src = "https://via.placeholder.com/800x700?text=Map+Image";
               }}
             />
-          </div>
-        </div>
-      </section>
-
-      {/* --- 하단 추천 섹션 --- */}
-      <section className="w-full px-10 pb-20 relative z-10 -mt-16">
-        <div className="max-w-[1600px] mx-auto bg-white/80 backdrop-blur-xl rounded-[48px] p-12 border border-white/50 shadow-2xl">
-          <div className="flex items-center justify-between mb-10 px-4">
-            <h4 className="text-[22px] font-extrabold text-[#0369A1]">서울특별시 추천 행사</h4>
-            <div className="flex space-x-3">
-              <button className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-400 shadow-md hover:bg-blue-50 transition-all border border-blue-100">&lt;</button>
-              <button className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-400 shadow-md hover:bg-blue-50 transition-all border border-blue-100">&gt;</button>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="space-y-4 group">
-                <div className="aspect-[4/3] bg-blue-50 rounded-[24px] shadow-sm group-hover:scale-[1.04] transition-all duration-300 border border-blue-100"></div>
-                <div className="h-10 bg-white/90 rounded-xl w-full border border-blue-50 flex items-center px-4">
-                  <div className="h-2 w-2/3 bg-blue-50 rounded"></div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
