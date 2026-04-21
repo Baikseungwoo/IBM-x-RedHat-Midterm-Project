@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import EventCard from "../components/EventCard";
+import EventCard from "../../components/EventCard";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const EventList = () => {
@@ -20,10 +20,35 @@ const EventList = () => {
   const regionParam = searchParams.get("region");
 
   useEffect(() => {
-    if (regionParam) {
-      setRegion(regionParam);
-    }
-  }, [regionParam]);
+  const dummyEvents = [
+    {
+      content_id: 1,
+      title: "서울 벚꽃 축제",
+      addr1: "서울 여의도",
+      first_image: "https://via.placeholder.com/300x200",
+      like_count: 12,
+      bookmark_count: 5,
+    },
+    {
+      content_id: 2,
+      title: "부산 불꽃 축제",
+      addr1: "부산 광안리",
+      first_image: "",
+      like_count: 30,
+      bookmark_count: 10,
+    },
+    {
+      content_id: 3,
+      title: "강릉 커피 페스티벌",
+      addr1: "강릉 안목해변",
+      first_image: "",
+      like_count: 8,
+      bookmark_count: 2,
+    },
+  ];
+
+  setEvents(dummyEvents);
+}, []);
 
   // ✅ 정렬 → status 변환
   const statusMap = {
@@ -79,79 +104,63 @@ const EventList = () => {
   return (
     <div className="p-6">
 
-      {/* 🔥 상단 필터 */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
+      {/* 🔥 상단 UI */}
+      <div className="flex items-center justify-between mb-8">
 
-        {/* 📍 지역 */}
-        <select
-          value={region}
-          onChange={(e) => setRegion(e.target.value)}
-          className="text-xl font-bold border-none outline-none"
-        >
-          {regions.map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
+        {/* 왼쪽 */}
+        <div className="flex items-center gap-4">
 
-        {/* 🔍 검색 */}
-        <div className="flex items-center border rounded-full px-3 py-1 w-80 bg-gray-100">
-          <input
-            type="text"
-            placeholder="행사를 검색하세요"
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            className="flex-1 bg-transparent outline-none text-sm"
-          />
-          {keyword && (
-            <button onClick={() => setKeyword("")}>❌</button>
-          )}
-          <button>🔍</button>
+          {/* 📍 지역 */}
+          <button className="text-2xl font-bold flex items-center gap-1">
+            {region}
+            <span>▼</span>
+          </button>
+
+          {/* 🔍 검색 */}
+          <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 w-[350px]">
+            <input
+              type="text"
+              placeholder="행사를 검색하세요"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              className="flex-1 bg-transparent outline-none text-sm"
+            />
+            {keyword && (
+              <button onClick={() => setKeyword("")}>✕</button>
+            )}
+            <button>🔍</button>
+          </div>
         </div>
 
-        {/* 📅 날짜 */}
-        <div className="flex items-center gap-2 border rounded-full px-3 py-1 text-sm">
-          📅
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="outline-none bg-transparent"
-          />
-          ~
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="outline-none bg-transparent"
-          />
-          {(startDate || endDate) && (
-            <button
-              onClick={() => {
-                setStartDate("");
-                setEndDate("");
-              }}
-            >
-              ❌
-            </button>
-          )}
-        </div>
+        {/* 오른쪽 */}
+        <div className="flex items-center gap-3">
 
-        {/* 🔽 정렬 */}
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-          className="border rounded-full px-3 py-1 text-sm"
-        >
-          <option value="latest">최신순</option>
-          <option value="likes">좋아요순</option>
-          <option value="ongoing">진행중</option>
-          <option value="ended">종료</option>
-        </select>
+          {/* 📅 날짜 */}
+          <div className="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-2 text-sm">
+            📅
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="bg-transparent outline-none"
+            />
+            ~
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="bg-transparent outline-none"
+            />
+          </div>
+
+          {/* 🔽 정렬 (UI만) */}
+          <div className="bg-gray-100 rounded-full px-4 py-2 text-sm cursor-pointer">
+            정렬 ▼
+          </div>
+        </div>
       </div>
 
-      {/* 🔥 이벤트 카드 */}
+      {/* 🔥 카드 리스트 */}
       <div className="grid grid-cols-3 gap-6">
         {events.length > 0 ? (
           events.map((event) => (
@@ -168,7 +177,7 @@ const EventList = () => {
         )}
       </div>
 
-      {/* 🔥 페이지네이션 (추후 연결) */}
+      {/* 🔥 페이지네이션 */}
       <div className="mt-10 text-center text-gray-500">
         1 2 3 4 5
       </div>
