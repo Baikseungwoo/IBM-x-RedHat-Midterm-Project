@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/AuthContextPro';
-import api from '../../../api';
+import { useAuth } from '../../contexts/AuthContext';
+import api from '../../api';
 
 const SignUp = () => {
 
