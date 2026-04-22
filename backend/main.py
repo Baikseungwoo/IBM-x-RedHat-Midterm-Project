@@ -48,11 +48,11 @@ async def lifespan(app: FastAPI):
     # scheduler.start()
 
     #동기화 즉시실행
-    await daily_sync_job()
+    # await daily_sync_job()
 
     yield
 
-    scheduler.shutdown(wait=False)
+    # scheduler.shutdown(wait=False)
     await async_engine.dispose()
 
 
