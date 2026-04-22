@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import Header from './components/Header'
@@ -14,12 +14,16 @@ import './App.css';
 import AboutPage from './pages/AboutPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
+import { AuthContext } from './contexts/AuthContext';
 
-function App() {
+
   return (
+
     <Router>
+
       <div className="App">
-        <Header />
+      
+        <Header/>
 
         <main style={{ minHeight: '80vh' }}>
           <Routes>
@@ -37,9 +41,11 @@ function App() {
         </main>
 
         <Footer />
+        
       </div>
     </Router>
+
   );
-}
+
 
 export default App;
