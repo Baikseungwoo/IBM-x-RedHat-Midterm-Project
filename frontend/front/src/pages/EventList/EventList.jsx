@@ -20,6 +20,12 @@ const EventList = () => {
   const regionParam = searchParams.get("region");
 
   useEffect(() => {
+    if (regionParam) {
+      setRegion(regionParam);
+    }
+  }, [regionParam]);
+
+  useEffect(() => {
   const dummyEvents = [
     {
       content_id: 1,
@@ -71,12 +77,14 @@ const EventList = () => {
         },
       });
 
-      setEvents(res.data.events);
+      setEvents(res.data?.events || []);
     } catch (err) {
       console.error(err);
+      setEvents([]);
     }
   };
 
+  /*
   // ✅ debounce 적용
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -84,7 +92,7 @@ const EventList = () => {
     }, 300);
 
     return () => clearTimeout(delay);
-  }, [region, keyword, sort, startDate, endDate]);
+  }, [region, keyword, sort, startDate, endDate]);*/
 
   // ✅ 지역 리스트
   const regions = [
@@ -100,6 +108,7 @@ const EventList = () => {
     "경남",
     "제주",
   ];
+  
 
   return (
     <div className="p-6">

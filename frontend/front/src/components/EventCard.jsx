@@ -15,6 +15,8 @@ const EventCard = ({ event, onClick }) => {
 
   // 🔥 좋아요 / 북마크 상태 가져오기
   useEffect(() => {
+    if(!event.content_id) return;
+    
     const fetchStatus = async () => {
       try {
         const [likeRes, bookmarkRes] = await Promise.all([
