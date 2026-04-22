@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import Header from './components/Header'
+import Header from './components/Header';
 import Footer from './components/Footer';
 import MainPage from './pages/Main/MainPage';
 import LoginPage from './pages/Login/LoginPage';
@@ -14,38 +14,34 @@ import './App.css';
 import AboutPage from './pages/AboutPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
-import { AuthContext } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext'; 
+import MainLayout from './components/MainLayout';
+import HeaderLayout from './components/HeaderLayout';
 
-
+function App() {
   return (
-
-    <Router>
-
-      <div className="App">
-      
-        <Header/>
-
-        <main style={{ minHeight: '80vh' }}>
-          <Routes>
-            <Route path="/" element={<MainPage />} />
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route element={<HeaderLayout />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUpPage />} />
+          </Route>
+
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<MainPage />} />
             <Route path="/mypage" element={<MyPage />} />
             <Route path="/events" element={<EventList />} />
             <Route path="/events/:id" element={<EventDetail />} />
             <Route path="/recommend" element={<RecommendPage />} />
-            <Route path="/about" element={<AboutPage /> } />
+            <Route path="/about" element={<AboutPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
-          </Routes>
-        </main>
-
-        <Footer />
-        
-      </div>
-    </Router>
-
+          </Route>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
-
+}
 
 export default App;
