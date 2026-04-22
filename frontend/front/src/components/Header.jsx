@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import MainPage from './../pages/Main/MainPage';
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('search bar');
   const [isModalOpen, setIsModalOpen] = useState(false); 
   const navigate = useNavigate();
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true); //로그인 시 프로필 클릭 우선 True 추후 변경
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -21,13 +22,18 @@ const Header = () => {
 
   const handleProfileClick = (e) => {
     e.preventDefault(); 
-    
-    if (!isLoggedIn) {
+    if (isLoggedIn) {
+      navigate('/mypage'); 
+    } else {
       alert("로그인이 필요한 서비스입니다.");
       navigate('/login');
-    } else {
-      setIsModalOpen(!isModalOpen);
     }
+    // if (!isLoggedIn) {
+    //   alert("로그인이 필요한 서비스입니다.");   // 여기도 로그인 구현 후 수정
+    //   navigate('/login');   
+    // } else {
+    //   setIsModalOpen(!isModalOpen);
+    // }
   };
 
   const handleLogout = () => {
