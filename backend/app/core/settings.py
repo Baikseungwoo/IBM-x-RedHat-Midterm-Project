@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     jwt_algorithm:str=Field("HS256", alias="JWT_ALGORITHM")
     access_token_expire_seconds:int=Field(900, alias="ACCESS_TOKEN_EXPIRE")
     refresh_token_expire_seconds:int=Field(604800, alias="REFRESH_TOKEN_EXPIRE")
+    
+    public_api_base_url: str = Field(..., alias="PUBLIC_API_BASE_URL")
+    public_api_key: str = Field(..., alias="PUBLIC_API_KEY")
+
 
     class Config:
         env_file=".env"

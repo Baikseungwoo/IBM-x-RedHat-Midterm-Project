@@ -1,4 +1,4 @@
-from database import Base
+from app.db.database import Base
 from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, CheckConstraint
