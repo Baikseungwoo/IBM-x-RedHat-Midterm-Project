@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import Header from './components/Header'
@@ -11,12 +11,16 @@ import EventList from './pages/EventList/EventList';
 import EventDetail from './pages/EventDetail/EventDetail';
 import RecommendPage from './pages/RecommedPage/RecommedPage'; 
 import './App.css';
+import { AuthContext } from './contexts/AuthContext';
 
-function App() {
+
   return (
+
     <Router>
+
       <div className="App">
-        <Header />
+      
+        <Header/>
 
         <main style={{ minHeight: '80vh' }}>
           <Routes>
@@ -31,9 +35,11 @@ function App() {
         </main>
 
         <Footer />
+        
       </div>
     </Router>
+
   );
-}
+
 
 export default App;
