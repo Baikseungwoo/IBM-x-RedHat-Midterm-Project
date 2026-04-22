@@ -12,6 +12,63 @@ from app.db.models.event_detail import EventDetail
 from app.external.public.client import fetch_detail_intro, fetch_festival_page
 
 
+ALL_AREA_CODES = {
+    "1", "2", "3", "4", "5", "6", "7", "8",
+    "31", "32", "33", "34", "35", "36", "37", "38", "39",
+}
+
+AREA_TO_REGION_10 = {
+    "1": "서울",
+    "2": "경기도", "31": "경기도",
+    "32": "강원도",
+    "33": "충청북도",
+    "34": "충청남도", "3": "충청남도", "8": "충청남도",
+    "37": "전라북도",
+    "38": "전라남도", "5": "전라남도",
+    "35": "경상북도", "4": "경상북도",
+    "36": "경상남도", "6": "경상남도", "7": "경상남도",
+    "39": "제주도",
+}
+
+
+def _validate_region_mapping() -> None:
+    missing = ALL_AREA_CODES - set(AREA_TO_REGION_10.keys())
+    if missing:
+        raise RuntimeError(f"region 매핑 누락 areaCode: {sorted(missing)}")
+
+
+def _region_10(item: dict) -> str:
+    area = _clean(item.get("areacode"))
+    if area in AREA_TO_REGION_10:
+        return AREA_TO_REGION_10[area]
+
+    # areacode 누락 시 addr1 보조 판별
+    addr1 = _clean(item.get("addr1")) or ""
+    if "서울" in addr1:
+        return "서울"
+    if "경기" in addr1 or "인천" in addr1:
+        return "경기도"
+    if "강원" in addr1:
+        return "강원도"
+    if "충북" in addr1 or "충청북" in addr1:
+        return "충청북도"
+    if "충남" in addr1 or "충청남" in addr1 or "대전" in addr1 or "세종" in addr1:
+        return "충청남도"
+    if "전북" in addr1 or "전라북" in addr1:
+        return "전라북도"
+    if "전남" in addr1 or "전라남" in addr1 or "광주" in addr1:
+        return "전라남도"
+    if "경북" in addr1 or "경상북" in addr1 or "대구" in addr1:
+        return "경상북도"
+    if "경남" in addr1 or "경상남" in addr1 or "부산" in addr1 or "울산" in addr1:
+        return "경상남도"
+    if "제주" in addr1:
+        return "제주도"
+
+    raise ValueError(f"지역 분류 실패: areacode={area}, addr1={addr1}, contentid={item.get('contentid')}")
+
+
+
 def _clean(value: str | None) -> str | None:
     if value is None:
         return None
@@ -72,7 +129,7 @@ def _map_event(item: dict) -> dict | None:
         "title": title,
         "addr1": _clean(item.get("addr1")),
         "addr2": _clean(item.get("addr2")),
-        "region": _clean(item.get("areacode")),
+        "region": _region_10(item),
         "zipcode": _clean(item.get("zipcode")),
         "start_date": start_date,
         "end_date": end_date,
@@ -197,6 +254,9 @@ async def sync_recent_and_upcoming_events_service(
     db: AsyncSession,
     size: int = 100,
 ) -> dict:
+    
+    _validate_region_mapping()
+
     # 오늘 기준 1달(30일) 전부터 이후 축제 모두
     from_date = (date.today() - timedelta(days=30)).strftime("%Y%m%d")
     to_date = "20991231"
