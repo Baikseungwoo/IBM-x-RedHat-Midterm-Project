@@ -1,4 +1,5 @@
 import uvicorn
+import app.db.models
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.database import Base, async_engine
