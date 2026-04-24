@@ -106,6 +106,15 @@ def _to_date(value: str | None) -> date | None:
         return None
 
 
+def _derive_status(start_date: date, end_date: date, today: date | None = None) -> str:
+    ref = today or date.today()
+    if ref < start_date:
+        return "진행전"
+    if ref > end_date:
+        return "진행완료"
+    return "진행중"
+
+
 def _map_event(item: dict) -> dict | None:
     content_id = _to_int(item.get("contentid"))
     content_type_id = _to_int(item.get("contenttypeid"))
@@ -139,7 +148,7 @@ def _map_event(item: dict) -> dict | None:
         "first_image": _clean(item.get("firstimage")),
         "first_image2": _clean(item.get("firstimage2")),
         "lcls_systm3": _clean(item.get("lclsSystm3")) or _clean(item.get("cat3")),
-        "status": _clean(item.get("progresstype")),
+        "status": _derive_status(start_date, end_date),
     }
 
 
