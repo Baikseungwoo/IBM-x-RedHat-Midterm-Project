@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import api from '../../api';
+
 
 const SignUp = () => {
-
-    // 컨텍스트에서 전체 유저 목록과 체크 상태 변경 함수를 가져왔다고 가정
-    // const { allUsers, setIdCheck } = useContext(UserContext);
 
     const [nickname, setNickname]=useState("")
     const [email, setEmail]=useState("")
@@ -20,30 +17,38 @@ const SignUp = () => {
     const [emailCheck, setEmailCheck]=useState(false)
 
     const navigate = useNavigate();
+    
+    const {checkNickname, checkEmail, signup} = useAuth();
 
     const handleNicknameCheck = async ()=>{
         if (!nickname) return alert("닉네임을 입력해주세요."); 
-        const response = await api.get(`/api/auth/check-nickname?nickname=${nickname}`);
-            if (response.data.duplicated === true){
-                alert("이미 사용중인 닉네임입니다.")
-                setNicknameCheck(false)
-            } else {
-                alert("사용 가능한 닉네임입니다.")
+        try{
+            const isDuplicated = await checkNickname(nickname)
+            if (isDuplicated){
+                alert("이미 사용중인 닉네임입니다.");
+            } else{
+                alert("사용 가능한 닉네임입니다.");
                 setNicknameCheck(true)
             }
+        } catch (error) {
+            alert("예기치 못한 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
         }
+    }
 
     const handleEmailCheck = async ()=>{
-        if (!email) return alert("이메일을 입력해주세요.");
-        const response = await api.get(`/api/auth/check-email?email=${email}`);
-            if (response.data.duplicated === true){
-                alert("이미 사용중인 이메일입니다.")
-                setEmailCheck(false)
-            } else {
-                alert("사용 가능한 이메일입니다.")
+        if (!email) return alert("이메일을 입력해주세요."); 
+        try{
+            const isDuplicated = await checkEmail(email)
+            if (isDuplicated){
+                alert("이미 사용중인 이메일입니다.");
+            } else{
+                alert("사용 가능한 이메일입니다.");
                 setEmailCheck(true)
             }
+        } catch (error) {
+            alert("예기치 못한 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
         }
+    }
 
     const handleSignup = async (e) =>{
         e.preventDefault()
@@ -62,84 +67,110 @@ const SignUp = () => {
         }
 
         try{
-            const signupData = {
-                email,
-                password,
-                nickname,
-                image_data:"" //string이라 넣음. 아니면 기본 이미지 넣는거 해야하나?
+            await signup({email, password, nickname, image_data:""})
+            alert("회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.")
+            navigate("/login")
+            } catch (error) {
+                alert("회원가입에 실패했습니다.")
             }
-            const response = await api.post("/api/auth/signup", signupData)
-            if (response.data.success === true){
-                alert("회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.")
-                navigate("/login")
-            }
-        } catch (error){
-            console.error("회원가입 에러 :", error)
-            alert("오류가 발생했습니다. 다시 시도해주세요.")
-        }
-
     }
 
     return (
-        <div>
-            <h1>회원가입</h1>
-            <form onSubmit={handleSignup}>
-                <div>
-                    <span>🙍‍♂️</span>
-                    <input 
-                    type='text'
-                    placeholder='닉네임을 입력해주세요' 
-                    value={nickname} 
-                    onChange={(e)=>{
-                        setNickname(e.target.value);
-                        setNicknameCheck(false);
-                    }}
-                    required/>
-                    <button type='button' onClick={handleNicknameCheck}>중복확인</button>
-                </div>
+        <div className="min-h-screen bg-[#E3F2FD] flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-white rounded-[2rem] shadow-2xl p-10 border border-white">
+                <h1 className="text-3xl font-bold text-center text-[#1E3A8A] mb-10">회원가입</h1>
+                
+                <form onSubmit={handleSignup} className="space-y-4">
+                    <div className="relative flex items-center">
+                        <span className="absolute left-5 text-lg">🙍‍♂️</span>
+                        <input 
+                            type='text'
+                            placeholder='닉네임을 입력해주세요' 
+                            className="w-full pl-12 pr-28 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all shadow-inner"
+                            value={nickname} 
+                            onChange={(e) => {
+                                setNickname(e.target.value);
+                                setNicknameCheck(false);
+                            }}
+                            required
+                        />
+                        <button 
+                            type='button' 
+                            onClick={handleNicknameCheck}
+                            className="absolute right-3 px-3 py-2 bg-blue-100 text-blue-600 text-xs font-bold rounded-xl hover:bg-blue-200 transition-colors"
+                        >
+                            중복확인
+                        </button>
+                    </div>
 
-                <div>
-                    <span>🙍‍♂️</span>
-                    <input 
-                    type='text'
-                    placeholder='이메일을 입력해주세요' 
-                    value={email} 
-                    onChange={(e)=>{
-                        setEmail(e.target.value);
-                        setEmailCheck(false);
-                    }}
-                    required/>
-                    <button type='button' onClick={handleEmailCheck}>중복확인</button>
-                </div>
+                    <div className="relative flex items-center">
+                        <span className="absolute left-5 text-lg">📧</span>
+                        <input 
+                            type='text'
+                            placeholder='이메일을 입력해주세요' 
+                            className="w-full pl-12 pr-28 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all shadow-inner"
+                            value={email} 
+                            onChange={(e) => {
+                                setEmail(e.target.value);
+                                setEmailCheck(false);
+                            }}
+                            required
+                        />
+                        <button 
+                            type='button' 
+                            onClick={handleEmailCheck}
+                            className="absolute right-3 px-3 py-2 bg-blue-100 text-blue-600 text-xs font-bold rounded-xl hover:bg-blue-200 transition-colors"
+                        >
+                            중복확인
+                        </button>
+                    </div>
 
-                <div>
-                    <span>🔒</span>
-                    <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder='비밀번호를 입력해주세요'
-                    value={password}
-                    onChange={(e)=>
-                        setPassword(e.target.value)
-                    }
-                    required/>
-                    <button type='button' onClick={()=>setShowPassword(!showPassword)}>👁</button>
-                </div>
+                    <div className="relative flex items-center">
+                        <span className="absolute left-5 text-lg">🔒</span>
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder='비밀번호를 입력해주세요'
+                            className="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all shadow-inner"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                        <button 
+                            type='button' 
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-5 text-gray-400 hover:text-blue-500 transition-colors"
+                        >
+                            {showPassword ? '👁️' : '🙈'}
+                        </button>
+                    </div>
 
-                <div>
-                    <span>🔒</span>
-                    <input
-                    type={showPasswordCheck ? 'text' : 'password'}
-                    placeholder='비밀번호를 재입력해주세요'
-                    value={confirmPassword}
-                    onChange={(e)=>
-                        setConfirmPassword(e.target.value)
-                    }
-                    required/>
-                    <button type='button' onClick={()=>setShowPasswordCheck(!showPasswordCheck)}>👁</button>
-                </div>
+                    <div className="relative flex items-center">
+                        <span className="absolute left-5 text-lg">🔒</span>
+                        <input
+                            type={showPasswordCheck ? 'text' : 'password'}
+                            placeholder='비밀번호를 재입력해주세요'
+                            className="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all shadow-inner"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                        />
+                        <button 
+                            type='button' 
+                            onClick={() => setShowPasswordCheck(!showPasswordCheck)}
+                            className="absolute right-5 text-gray-400 hover:text-blue-500 transition-colors"
+                        >
+                            {showPasswordCheck ? '👁️' : '🙈'}
+                        </button>
+                    </div>
 
-                <button type='submit'>회원가입</button>
-            </form>
+                    <button 
+                        type='submit'
+                        className="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-2xl shadow-lg transition-all transform active:scale-95 mt-6"
+                    >
+                        회원가입
+                    </button>
+                </form>
+            </div>
         </div>
     );
 };
