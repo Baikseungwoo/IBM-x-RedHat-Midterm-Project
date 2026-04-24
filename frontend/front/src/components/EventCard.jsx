@@ -109,7 +109,7 @@ const EventCard = ({ event, onClick }) => {
               liked ? "text-red-500" : ""
             } ${loading ? "opacity-50" : ""}`}
           >
-            ❤️ {likeCount}
+            ♡ {likeCount}
           </span>
 
           <span
