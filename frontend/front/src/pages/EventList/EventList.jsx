@@ -16,7 +16,7 @@ const EventList = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // ✅ URL에서 region 받기
+  // 지역받기
   const regionParam = searchParams.get("region");
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const EventList = () => {
       content_id: 1,
       title: "서울 벚꽃 축제",
       addr1: "서울 여의도",
-      first_image: "https://via.placeholder.com/300x200",
+      first_image: "https://picsum.photos/300/200",
       like_count: 12,
       bookmark_count: 5,
     },
@@ -56,7 +56,7 @@ const EventList = () => {
   setEvents(dummyEvents);
 }, []);
 
-  // ✅ 정렬 → status 변환
+  // 정렬
   const statusMap = {
     latest: "",
     likes: "likes",
@@ -64,7 +64,7 @@ const EventList = () => {
     ended: "ended",
   };
 
-  // ✅ 이벤트 요청 함수
+  // 이벤트 요청
   const fetchEvents = async () => {
     try {
       const res = await axios.get("/api/events/filter", {
@@ -85,7 +85,7 @@ const EventList = () => {
   };
 
   /*
-  // ✅ debounce 적용
+  // 
   useEffect(() => {
     const delay = setTimeout(() => {
       fetchEvents();
@@ -94,7 +94,7 @@ const EventList = () => {
     return () => clearTimeout(delay);
   }, [region, keyword, sort, startDate, endDate]);*/
 
-  // ✅ 지역 리스트
+  // 지역 리스트
   const regions = [
     "전체",
     "서울",
@@ -113,19 +113,19 @@ const EventList = () => {
   return (
     <div className="p-6">
 
-      {/* 🔥 상단 UI */}
+      {/* 상단 UI */}
       <div className="flex items-center justify-between mb-8">
 
         {/* 왼쪽 */}
         <div className="flex items-center gap-4">
 
-          {/* 📍 지역 */}
+          {/* 지역 */}
           <button className="text-2xl font-bold flex items-center gap-1">
             {region}
             <span>▼</span>
           </button>
 
-          {/* 🔍 검색 */}
+          {/* 검색 */}
           <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 w-[350px]">
             <input
               type="text"
@@ -144,7 +144,7 @@ const EventList = () => {
         {/* 오른쪽 */}
         <div className="flex items-center gap-3">
 
-          {/* 📅 날짜 */}
+          {/* 날짜 */}
           <div className="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-2 text-sm">
             📅
             <input
@@ -162,21 +162,21 @@ const EventList = () => {
             />
           </div>
 
-          {/* 🔽 정렬 (UI만) */}
+          {/* 정렬 (UI만) */}
           <div className="bg-gray-100 rounded-full px-4 py-2 text-sm cursor-pointer">
             정렬 ▼
           </div>
         </div>
       </div>
 
-      {/* 🔥 카드 리스트 */}
+      {/* 카드 리스트 */}
       <div className="grid grid-cols-3 gap-6">
         {events.length > 0 ? (
           events.map((event) => (
             <EventCard
               key={event.content_id}
               event={event}
-              onClick={() => navigate(`/detail/${event.content_id}`)}
+              onClick={() => navigate(`/events/${event.content_id}`)}
             />
           ))
         ) : (
@@ -186,7 +186,7 @@ const EventList = () => {
         )}
       </div>
 
-      {/* 🔥 페이지네이션 */}
+      {/* 페이지네이션 */}
       <div className="mt-10 text-center text-gray-500">
         1 2 3 4 5
       </div>
