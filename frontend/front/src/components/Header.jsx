@@ -3,11 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import MainPage from './../pages/Main/MainPage';
 
 const Header = () => {
-  const [searchQuery, setSearchQuery] = useState('search bar');
+  const [searchQuery, setSearchQuery] = useState('상세 행사 검색');
   const [isModalOpen, setIsModalOpen] = useState(false); 
   const navigate = useNavigate();
 
-  const [isLoggedIn, setIsLoggedIn] = useState(true); //로그인 시 프로필 클릭 우선 True 추후 변경
+  const [isLoggedIn, setIsLoggedIn] = useState(true); //로그인 시 프로필 클릭 (우선 True 추후 변경)
 
   const handleSearch = (e) => {
     e.preventDefault();
