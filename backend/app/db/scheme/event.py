@@ -1,76 +1,104 @@
+from datetime import date
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+
+from pydantic import BaseModel
 
 
-# event 생성 요청
-class EventCreate(BaseModel):
-    event_title: str
-    event_content_id: int
-    event_start_date: Optional[str] = None
-    event_end_date: Optional[str] = None
-    event_place: Optional[str] = None
-    event_target: Optional[str] = None
-    event_fee: Optional[str] = None
-    event_thumbnail: Optional[str] = None
+class EventTopItem(BaseModel):
+    content_id: int
+    title: str
+    region: Optional[str] = None
+    first_image: Optional[str] = None
+    start_date: date
+    end_date: date
+    like_count: int
 
 
-# event 수정 요청
-class EventUpdate(BaseModel):
-    event_title: Optional[str] = None
-    event_content_id: Optional[int] = None
-    event_start_date: Optional[str] = None
-    event_end_date: Optional[str] = None
-    event_place: Optional[str] = None
-    event_target: Optional[str] = None
-    event_fee: Optional[str] = None
-    event_thumbnail: Optional[str] = None
+class EventListItem(BaseModel):
+    content_id: int
+    title: str
+    region: Optional[str] = None
+    first_image: Optional[str] = None
+    start_date: date
+    end_date: date
+    status: Optional[str] = None
+    like_count: int
+    bookmark_count: int
 
 
-# event 응답
-class EventResponse(BaseModel):
-    event_id: int
-    event_title: str
-    event_content_id: int
-    event_start_date: Optional[str] = None
-    event_end_date: Optional[str] = None
-    event_place: Optional[str] = None
-    event_target: Optional[str] = None
-    event_fee: Optional[str] = None
-    event_thumbnail: Optional[str] = None
-
-    model_config = ConfigDict(from_attributes=True)
+class EventSearchItem(BaseModel):
+    content_id: int
+    title: str
+    region: Optional[str] = None
+    first_image: Optional[str] = None
+    start_date: date
+    end_date: date
 
 
-# event_detail 생성 요청
-class EventDetailCreate(BaseModel):
-    event_detail_event_id: int
-    event_detail_description: Optional[str] = None
-    event_detail_address: Optional[str] = None
-    event_detail_contact: Optional[str] = None
-    event_detail_host: Optional[str] = None
-    event_detail_notice: Optional[str] = None
-    event_detail_sub_event: Optional[str] = None
+class EventAutocompleteItem(BaseModel):
+    content_id: int
+    title: str
 
 
-# event_detail 수정 요청
-class EventDetailUpdate(BaseModel):
-    event_detail_description: Optional[str] = None
-    event_detail_address: Optional[str] = None
-    event_detail_contact: Optional[str] = None
-    event_detail_host: Optional[str] = None
-    event_detail_notice: Optional[str] = None
-    event_detail_sub_event: Optional[str] = None
+class EventDetailData(BaseModel):
+    content_id: int
+    title: str
+    addr1: Optional[str] = None
+    addr2: Optional[str] = None
+    region: Optional[str] = None
+    zipcode: Optional[str] = None
+    start_date: date
+    end_date: date
+    tel: Optional[str] = None
+    mapx: Optional[float] = None
+    mapy: Optional[float] = None
+    first_image: Optional[str] = None
+    first_image2: Optional[str] = None
+    lclsSystm3: Optional[str] = None
+    status: Optional[str] = None
+    like_count: int
+    bookmark_count: int
+    event_homepage: Optional[str] = None
+    play_time: Optional[str] = None
+    program: Optional[str] = None
+    sponsor1: Optional[str] = None
+    sponsor1_tel: Optional[str] = None
 
 
-# event_detail 응답
+class RegionTopResponse(BaseModel):
+    success: bool
+    events: list[EventTopItem]
+
+
+class TopResponse(BaseModel):
+    success: bool
+    events: list[EventTopItem]
+
+
 class EventDetailResponse(BaseModel):
-    event_detail_id: int
-    event_detail_event_id: int
-    event_detail_description: Optional[str] = None
-    event_detail_address: Optional[str] = None
-    event_detail_contact: Optional[str] = None
-    event_detail_host: Optional[str] = None
-    event_detail_notice: Optional[str] = None
-    event_detail_sub_event: Optional[str] = None
+    success: bool
+    event: EventDetailData
 
-    model_config = ConfigDict(from_attributes=True)
+
+class SearchResponse(BaseModel):
+    success: bool
+    events: list[EventSearchItem]
+
+
+class EventListResponse(BaseModel):
+    success: bool
+    events: list[EventListItem]
+
+
+class CategoryItem(BaseModel):
+    lclsSystm3: str
+
+
+class CategoriesResponse(BaseModel):
+    success: bool
+    categories: list[CategoryItem]
+
+
+class AutocompleteResponse(BaseModel):
+    success: bool
+    events: list[EventAutocompleteItem]
