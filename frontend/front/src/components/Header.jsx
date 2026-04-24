@@ -6,7 +6,7 @@ const Header = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); 
   const navigate = useNavigate();
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -21,13 +21,15 @@ const Header = () => {
 
   const handleProfileClick = (e) => {
     e.preventDefault(); 
-    
-    if (!isLoggedIn) {
-      alert("로그인이 필요한 서비스입니다.");
-      navigate('/login');
-    } else {
-      setIsModalOpen(!isModalOpen);
+    if (isLoggedIn){
+      navigate('/myPage');
     }
+    // if (!isLoggedIn) {
+    //   alert("로그인이 필요한 서비스입니다.");
+    //   navigate('/login');
+    // } else {
+    //   setIsModalOpen(!isModalOpen);
+    // }
   };
 
   const handleLogout = () => {
