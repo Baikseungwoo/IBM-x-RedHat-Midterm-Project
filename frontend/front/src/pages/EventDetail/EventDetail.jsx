@@ -44,7 +44,7 @@ const EventDetail = () => {
 
       setLiked(res.data.liked);
 
-      // 👉 카운트 업데이트
+      // 카운트 업데이트
       setEvent((prev) => ({
         ...prev,
         like_count: res.data.like_count,
