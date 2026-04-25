@@ -1,17 +1,15 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 
-# 생성
-class CourseDetailCreate(BaseModel):
+class CourseItemCreate(BaseModel):
+    content_id: int
+    sequence: int = Field(..., ge=1)
+
+
+class CourseItemResponse(BaseModel):
+    course_item_id: int
     course_id: int
-    course_detail_content: str | None = None
+    content_id: int
+    sequence: int
 
-
-# 응답
-class CourseDetailResponse(BaseModel):
-    course_detail_id: int
-    course_id: int
-    course_detail_content: str | None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
