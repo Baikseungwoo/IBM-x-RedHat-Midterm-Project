@@ -1,15 +1,21 @@
-from sqlalchemy import Column, Integer, Text, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import relationship
+
 from app.db.database import Base
 
 
-class CourseDetail(Base):
-    __tablename__ = "course_detail"
+class CourseItem(Base):
+    __tablename__ = "course_items"
 
-    course_detail_id = Column(Integer, primary_key=True, index=True)
-    course_id = Column(Integer, ForeignKey("course.course_id"), nullable=False)
+    course_item_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    course_id = Column(Integer, ForeignKey("courses.course_id", ondelete="CASCADE"), nullable=False, index=True)
+    content_id = Column(Integer, ForeignKey("events.content_id", ondelete="RESTRICT"), nullable=False, index=True)
+    sequence = Column(Integer, nullable=False)
 
-    course_detail_content = Column(Text, nullable=True)
+    __table_args__ = (
+        UniqueConstraint("course_id", "sequence", name="uq_course_item_sequence"),
+        UniqueConstraint("course_id", "content_id", name="uq_course_item_content"),
+    )
 
-    # 관계
-    course = relationship("Course", back_populates="course_details")
+    course = relationship("Course", back_populates="items")
+    event = relationship("Event", back_populates="course_items")

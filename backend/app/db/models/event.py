@@ -33,6 +33,9 @@ class Event(Base):
         uselist=False,
         cascade="all, delete-orphan"
     )
+    
+    detail = relationship("EventDetail", back_populates="event", uselist=False, cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="event", cascade="all, delete-orphan")
     likes = relationship("Like", back_populates="event", cascade="all, delete-orphan")
     bookmarks = relationship("Bookmark", back_populates="event", cascade="all, delete-orphan")
+    course_items = relationship("CourseItem", back_populates="event")  # 추가

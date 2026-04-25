@@ -18,3 +18,4 @@ class User(Base):
     reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
     likes = relationship("Like", back_populates="user", cascade="all, delete-orphan")
     bookmarks = relationship("Bookmark", back_populates="user", cascade="all, delete-orphan")
+    courses = relationship("Course", back_populates="user", cascade="all, delete-orphan")  # 추가)
