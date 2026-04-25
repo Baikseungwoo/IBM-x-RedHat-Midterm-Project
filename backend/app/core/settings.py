@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     public_api_base_url: str = Field(..., alias="PUBLIC_API_BASE_URL")
     public_api_key: str = Field(..., alias="PUBLIC_API_KEY")
 
+    openai_api_key: str = Field(..., alias="OPENAI_API_KEY")
+    openai_model: str = Field("gpt-4o-mini", alias="OPENAI_MODEL")
+
+
 
     class Config:
         env_file=".env"

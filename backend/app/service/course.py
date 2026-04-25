@@ -8,30 +8,33 @@ from app.db.crud.course import (
     list_recommendation_candidates,
 )
 from app.db.scheme.course import CourseRecommendRequest, CourseSaveRequest
+from app.external.openai.client import recommend_course_by_gpt
 
 
-def _build_default_recommendation(
+def _fallback_recommendation(
     region: str,
     target_date,
     keyword: str,
     candidates: list[dict],
 ) -> tuple[str, str, list[dict]]:
-    # TODO: 여기를 GPT 내부 API 호출 로직으로 교체하면 됨.
     picked = candidates[:3]
     course_title = f"{region} {keyword} 추천 코스"
     description = (
-        f"{target_date}에 {region}에서 즐길 수 있는 '{keyword}' 중심 일정입니다. "
-        f"인기/북마크 지표를 기준으로 동선 구성이 쉬운 3개 행사를 추천합니다."
+    f"{target_date} {region}에서 '{keyword}' 테마에 맞는 코스를 구성했습니다. "
+    f"키워드와의 관련성, 일정 적합성(해당 날짜 운영), 그리고 인기도(좋아요/북마크)를 함께 고려해 "
+    "3개 행사를 선택했습니다."
     )
     return course_title, description, picked
 
 
 async def recommend_course_service(db: AsyncSession, payload: CourseRecommendRequest) -> dict:
+    region = payload.region.strip()
+    keyword = payload.keyword.strip()
+
     candidates = await list_recommendation_candidates(
         db=db,
-        region=payload.region.strip(),
+        region=region,
         target_date=payload.date,
-        keyword=payload.keyword.strip(),
         limit=50,
     )
 
@@ -41,19 +44,38 @@ async def recommend_course_service(db: AsyncSession, payload: CourseRecommendReq
             detail="Not enough events to recommend (need at least 3).",
         )
 
-    course_title, description, picked = _build_default_recommendation(
-        region=payload.region.strip(),
-        target_date=payload.date,
-        keyword=payload.keyword.strip(),
-        candidates=candidates,
-    )
+    try:
+        gpt_result = await recommend_course_by_gpt(
+            region=region,
+            target_date=payload.date,
+            keyword=keyword,
+            candidates=candidates,
+        )
+
+        picked_ids = gpt_result["picked_content_ids"]
+        by_id = {c["content_id"]: c for c in candidates}
+        picked = [by_id[cid] for cid in picked_ids if cid in by_id][:3]
+
+        if len(picked) < 3:
+            raise ValueError("GPT picked less than 3 valid events")
+
+        course_title = gpt_result["course_title"]
+        description = gpt_result["description"]
+
+    except Exception:
+        course_title, description, picked = _fallback_recommendation(
+            region=region,
+            target_date=payload.date,
+            keyword=keyword,
+            candidates=candidates,
+        )
 
     return {
         "success": True,
         "course_title": course_title,
-        "region": payload.region.strip(),
+        "region": region,
         "date": payload.date,
-        "keyword": payload.keyword.strip(),
+        "keyword": keyword,
         "description": description,
         "course": picked,
     }

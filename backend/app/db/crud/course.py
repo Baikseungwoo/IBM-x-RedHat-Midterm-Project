@@ -20,27 +20,24 @@ async def list_recommendation_candidates(
     db: AsyncSession,
     region: str,
     target_date: date,
-    keyword: str,
     limit: int = 50,
 ) -> list[dict]:
-    stmt = select(Event).where(
-        and_(
-            Event.region == region,
-            Event.start_date <= target_date,
-            Event.end_date >= target_date,
+    stmt = (
+        select(Event)
+        .where(
+            and_(
+                Event.region == region,
+                Event.start_date <= target_date,
+                Event.end_date >= target_date,
+            )
         )
+        .order_by(
+            Event.like_count.desc(),
+            Event.bookmark_count.desc(),
+            Event.start_date.asc(),
+        )
+        .limit(limit)
     )
-
-    kw = keyword.strip()
-    if kw:
-        stmt = stmt.where(Event.title.ilike(f"%{kw}%"))
-
-    stmt = stmt.order_by(
-        Event.like_count.desc(),
-        Event.bookmark_count.desc(),
-        Event.start_date.asc(),
-    ).limit(limit)
-
     events = (await db.execute(stmt)).scalars().all()
 
     return [
