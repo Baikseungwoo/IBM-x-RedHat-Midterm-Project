@@ -8,7 +8,7 @@ class EventDetail(Base):
     __tablename__ = "event_details"
 
     detail_intro_id = Column(Integer, primary_key=True, index=True)
-    detail_content_id = Column(  Integer,ForeignKey("events.content_id", ondelete="CASCADE"),
+    content_id = Column(  Integer,ForeignKey("events.content_id", ondelete="CASCADE"),
         nullable=False,
         unique=True
     )

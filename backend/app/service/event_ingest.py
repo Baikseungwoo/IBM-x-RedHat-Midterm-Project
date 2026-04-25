@@ -154,7 +154,7 @@ def _map_event(item: dict) -> dict | None:
 
 def _map_event_detail(item: dict, content_id: int) -> dict:
     # 값 있는 것만 넣기
-    detail = {"detail_content_id": content_id}
+    detail = {"content_id": content_id}
 
     mapping = {
         "event_place": item.get("eventplace"),
@@ -233,7 +233,7 @@ async def sync_events_service(
             continue
 
         result = await db.execute(
-            select(EventDetail).where(EventDetail.detail_content_id == content_id)
+            select(EventDetail).where(EventDetail.content_id == content_id)
         )
         detail_obj = result.scalar_one_or_none()
 
@@ -241,7 +241,7 @@ async def sync_events_service(
             db.add(EventDetail(**detail_row))
         else:
             for k, v in detail_row.items():
-                if k != "detail_content_id":
+                if k != "content_id":
                     setattr(detail_obj, k, v)
         detail_saved += 1
 
