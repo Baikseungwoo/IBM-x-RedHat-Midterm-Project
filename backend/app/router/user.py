@@ -6,6 +6,8 @@ from app.db.database import get_db
 from app.db.scheme.user import MeResponse, MeUpdateRequest
 from app.service.user import get_me_service, update_me_service
 from app.service.bookmark import list_my_bookmarks_service, delete_my_bookmark_service
+from app.db.scheme.course import DeleteCourseResponse, MyCoursesResponse
+from app.service.course import delete_my_course_service, list_my_courses_service
 
 router = APIRouter(prefix="/api/users", tags=["MyPage"])
 
@@ -43,3 +45,19 @@ async def delete_my_bookmark(
     db: AsyncSession = Depends(get_db),
 ):
     return await delete_my_bookmark_service(db, user_id, content_id)
+
+@router.get("/me/courses", response_model=MyCoursesResponse)
+async def get_my_courses(
+    user_id: int = Depends(get_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    return await list_my_courses_service(db, user_id)
+
+
+@router.delete("/me/courses/{course_id}", response_model=DeleteCourseResponse)
+async def delete_my_course(
+    course_id: int,
+    user_id: int = Depends(get_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    return await delete_my_course_service(db, user_id, course_id)
