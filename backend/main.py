@@ -15,6 +15,10 @@ from app.middleware.token_refresh import TokenRefreshMiddleware
 from app.router.auth import router as auth_router
 from app.router.user import router as user_router
 from app.router.event import router as event_router
+from app.router.event_interaction import router as event_interaction_router
+from app.router.review import router as review_router
+
+
 from app.service.event_ingest import sync_recent_and_upcoming_events_service
 
 load_dotenv(dotenv_path=".env")
@@ -71,6 +75,8 @@ app.add_middleware(TokenRefreshMiddleware)
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(event_router)
+app.include_router(event_interaction_router)
+app.include_router(review_router)
 
 
 if __name__ == "__main__":
