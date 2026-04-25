@@ -77,7 +77,7 @@ async def get_top_events(db: AsyncSession) -> dict:
 async def get_event_detail(db: AsyncSession, content_id: int) -> dict:
     stmt = (
         select(Event, EventDetail)
-        .outerjoin(EventDetail, EventDetail.detail_content_id == Event.content_id)
+        .outerjoin(EventDetail, EventDetail.content_id == Event.content_id)
         .where(Event.content_id == content_id)
     )
     row = (await db.execute(stmt)).first()
