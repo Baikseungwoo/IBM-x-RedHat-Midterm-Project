@@ -54,8 +54,6 @@ const EventList = () => {
     try {
       const res = await axios.get("/api/events/filter", {
         params: {
-          page,
-          limit: pageSize,
           ...(region !== "전체" && { region }),
           ...(keyword && { keyword }),
           ...(statusMap[sort] && { status: statusMap[sort] }),
@@ -65,7 +63,7 @@ const EventList = () => {
       });
 
       setEvents(res.data?.events || []);
-      setTotalCount(res.data?.total || 0);
+      setTotalCount(res.data.events.length);
     } catch (err) {
       console.error(err);
       setEvents([]);

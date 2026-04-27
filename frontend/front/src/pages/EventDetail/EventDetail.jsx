@@ -114,20 +114,21 @@ const EventDetail = () => {
           <img
             src={event.first_image || "/no-image.png"}
             alt={event.title}
+            onError={(e) => (e.target.src = "/no-image.png")}
             className="w-full h-full object-cover"
           />
         </div>
 
         {/* 정보 */}
         <div className="flex-1 space-y-2 text-sm">
-          <p>행사 장소 : {event.addr1}</p>
-          <p>행사 홈페이지 : {event.event_homepage}</p>
-          <p>행사 연락처 : {event.tel}</p>
-          <p>행사 진행 시간 : {event.play_time}</p>
-          <p>이용 시간 : {event.use_time}</p>
-          <p>행사 프로그램 : {event.program}</p>
-          <p>주최자 : {event.sponsor1}</p>
-          <p>주최자 연락처 : {event.sponsor1_tel}</p>
+          <p>행사 장소 : {event.addr1 || "-"}</p>
+          <p>행사 홈페이지 : {event.event_homepage || "-"}</p>
+          <p>행사 연락처 : {event.tel || "-"}</p>
+          <p>행사 진행 시간 : {event.play_time || "-"}</p>
+          <p>이용 시간 : {event.use_time || "-"}</p>
+          <p>행사 프로그램 : {event.program || "-"}</p>
+          <p>주최자 : {event.sponsor1 || "-"}</p>
+          <p>주최자 연락처 : {event.sponsor1_tel || "-"}</p>
         </div>
       </div>
 
