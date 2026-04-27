@@ -1,190 +1,50 @@
-import React, { useEffect, useRef, useState, } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useEffect, useState } from 'react';
 import api from '../../api';
+import ProfileSection from './ProfileSection';
+import BookmarkSection from './BookmarkSection';
+import CourseSection from './CourseSection';
 
 const MyPage = () => {
-    const [email, setEmail]=useState("")
-    const [nickname, setNickname]=useState("")
-    const [image_data, setImage_data]=useState("")
+    const [user, setUser] = useState({ nickname: '', email: '', image_data: '' });
+    const [bookmarks, setBookmarks] = useState([]);
+    const [courses, setCourses] = useState([]);
 
-    const {checkEmail, checkNickname} = useAuth();
-
-    const [nicknameMode, setNicknameMode]=useState("view") //view:수정, check:중복확인, save:저장
-    const [emailMode, setEmailMode]=useState("view")
-    const [nicknameMsg, setNicknameMsg]=useState("")
-    const [emailMsg, setEmailMsg]=useState("")
-
-    const fileInputRef = useRef(null);
-
-
-    //(마운트)회원 정보 불러오기
-    useEffect(()=>{
-        const userData = async () =>{
-            try{
-                // const response= await api.get('/api/users/me');
-                // if(response.data.success){
-                const response = {
-                    data: {
-                        success: true,
-                        user: {
-                            nickname: "테스트유저",
-                            email: "test@example.com",
-                            image_data: "https://via.placeholder.com/150"
-                        }
-                    }
-                }
-                if (true){
-                    const user = response.data.user;
-                    setNickname(user.nickname)
-                    setEmail(user.email)
-                    setImage_data(user.image_data)
-                }
-            } catch (error) {
-                console.error("회원정보 로드 오류 : ", error)
-                alert("회원정보를 로드하는데 실패했습니다.")
-            }
-        }
-        userData();
-    }, []);
-
-    //연필 버튼 클릭 -> 이미지 input 클릭
-    const handleImageBtn = () => {
-        fileInputRef.current?.click();
-    }
-
-    //사진 선택 -> 
-    const onChangeImage = (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-            const base64 = reader.result;
-            
+    useEffect(() => {
+        const fetchAllData = async () => {
             try {
+                // 실제 연동 시 주석 해제, 현재는 테스트 데이터 포함
+                const userRes = await api.get('/api/users/me');
+                if (userRes.data.success) setUser(userRes.data.user);
 
-                const response = await api.put('/api/users/me', {
-                    image_data: base64,
-                    nickname: nickname, 
-                    email: email
-                });
+                const bookmarkRes = await api.get('/api/users/me/bookmarks');
+                if (bookmarkRes.data.success) setBookmarks(bookmarkRes.data.events);
 
-                if (response.data.success) {
-                    setImage_data(base64); 
-                    alert("프로필 이미지가 변경되었습니다.");
-                }
+                const courseRes = await api.get('/api/users/me/courses');
+                if (courseRes.data.success) setCourses(courseRes.data.courses);
             } catch (error) {
-                console.error("이미지 업로드 오류 : ", error);
-                alert("이미지 변경에 실패했습니다.");
+                console.error("Data load error:", error);
             }
         };
-        reader.readAsDataURL(file);
-    }
-
-    //닉네임 수정 버튼 변경
-    const handleNicknameBtn = async () =>{
-        if(nicknameMode === "view"){
-            setNicknameMode("check")
-        } else if(nicknameMode === "check"){
-            if(!nickname) return alert("닉네임을 입력해주세요.")
-            try{
-                const isDuplicated = await checkNickname(nickname)
-                if(isDuplicated){
-                    setNicknameMsg("이미 사용중인 닉네임 입니다.")
-                } else{
-                    setNicknameMsg("사용 가능한 닉네임입니다.")
-                    setNicknameMode("save")
-                }
-            } catch(error){
-                alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
-            }
-        }
-    }
-
-    //이메일 수정버튼 변경
-    const handleEmailBtn = async () =>{
-        if(emailMode === "view"){
-            setEmailMode("check")
-        } else if(emailMode === "check"){
-            if(!email) return alert("이메일을 입력해주세요.")
-            try{
-                const isDuplicated = await checkEmail(email)
-                if(isDuplicated){
-                    setEmailMsg("이미 사용중인 이메일입니다.")
-                } else{
-                    setEmailMsg("사용 가능한 이메일입니다.")
-                    setEmailMode("save")
-                }
-            } catch (error) {
-                alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
-            }
-        }
-    }
-
-    //회원정보 수정 저장
-    const handleUpdate = async () =>{
-        try{
-            const response = await api.put('/api/users/me', {
-                email:email,
-                nickname:nickname,
-                image_data:image_data
-            })
-        } catch (error) {
-            console.error("회원정보 수정 오류 : ", error)
-            alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
-        }
-    }
-
-
-
-
+        fetchAllData();
+    }, []);
 
     return (
-        <div>
-            <h1>마이페이지</h1>
-            <div>
-                <img
-                    src={image_data || "https://via.placeholder.com/150"}
-                    alt="Profile"
-                    style={{ width: "100px", height: "100px", borderRadius: "50%" }}
-                />
+        <div className="min-h-screen bg-gray-50 flex flex-col items-center pt-10 pb-20 px-4">
+            <div className="w-full max-w-5xl space-y-10">
+                <h1 className="text-3xl font-black ml-4">마이페이지</h1>
+                
+                {/* 1. 프로필 섹션 */}
+                <ProfileSection user={user} setUser={setUser} />
 
-                <button onClick={handleImageBtn}>🖍</button>
+                {/* 2. 북마크 섹션 */}
+                <BookmarkSection bookmarks={bookmarks} setBookmarks={setBookmarks} />
 
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={onChangeImage}
-                    accept="image/*"
-                    style={{ display: "none" }}
-                />
+                {/* 3. AI 추천 코스 섹션 */}
+                <CourseSection courses={courses} setCourses={setCourses} />
 
-                <hr />
-
-            <div>
-                <label>닉네임</label>
-                <div>
-                    {nicknameMode === "view" ? (
-                        <span>{nickname}</span>
-                    ) : (
-                        <input type='text' 
-                        value={nickname} 
-                        onChange={(e)=>{
-                            setNickname(e.target.value)
-                            setNicknameMode("check")
-                        }}  
-                        />
-                    )}
-
-                    <button onClick={handleImageBtn}>
-                        {nicknameMode === "view" ? "수정" : 
-                         nicknameMode === "check" ? "중복확인" : "저장"}
-                    </button>
+                <div className="text-center text-[10px] text-gray-300 tracking-widest pt-10">
+                    GIUT PROJECT © 2026. ALL RIGHTS RESERVED.
                 </div>
-
-                {nicknameMsg && <p>{nicknameMsg}</p>}
-
-            </div>
             </div>
         </div>
     );
