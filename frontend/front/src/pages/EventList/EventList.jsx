@@ -72,7 +72,7 @@ const EventList = () => {
     }
   };
 
-  // 자동 fetch (debounce)
+  // 자동 fetch
   useEffect(() => {
     const delay = setTimeout(() => {
       fetchEvents();
