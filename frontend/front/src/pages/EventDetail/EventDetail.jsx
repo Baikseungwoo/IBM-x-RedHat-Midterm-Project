@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useParams } from "react-router-dom";
+import api from './../../api';
 
 const EventDetail = () => {
   const { id } = useParams();
@@ -20,10 +20,10 @@ const EventDetail = () => {
       try {
         const [eventRes, likeRes, bookmarkRes, reviewRes] =
           await Promise.all([
-            axios.get(`/api/events/${id}`),
-            axios.get(`/api/events/${id}/likes/me`),
-            axios.get(`/api/events/${id}/bookmarks/me`),
-            axios.get(`/api/events/${id}/reviews`),
+            api.get(`/api/events/${id}`),
+            api.get(`/api/events/${id}/likes/me`),
+            api.get(`/api/events/${id}/bookmarks/me`),
+            api.get(`/api/events/${id}/reviews`),
           ]);
 
         setEvent(eventRes.data.event);

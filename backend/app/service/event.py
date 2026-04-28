@@ -54,7 +54,7 @@ async def get_region_top_events(db: AsyncSession, region: str) -> dict:
     today = date.today()
     stmt = (
         select(Event)
-        .where(and_(Event.region == region, _ongoing_condition(today)))
+        .where(and_(Event.region == region, Event.end_date >= date.today()))
         .order_by(Event.like_count.desc(), Event.start_date.asc())
         .limit(3)
     )
