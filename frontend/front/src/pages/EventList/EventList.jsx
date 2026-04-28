@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../api";
 import EventCard from "../../components/EventCard";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -26,35 +26,18 @@ const EventList = () => {
   }, [regionParam]);
 
   useEffect(() => {
-  const dummyEvents = [
-    {
-      content_id: 1,
-      title: "서울 벚꽃 축제",
-      addr1: "서울 여의도",
-      first_image: "https://picsum.photos/300/200",
-      like_count: 12,
-      bookmark_count: 5,
-    },
-    {
-      content_id: 2,
-      title: "부산 불꽃 축제",
-      addr1: "부산 광안리",
-      first_image: "",
-      like_count: 30,
-      bookmark_count: 10,
-    },
-    {
-      content_id: 3,
-      title: "강릉 커피 페스티벌",
-      addr1: "강릉 안목해변",
-      first_image: "",
-      like_count: 8,
-      bookmark_count: 2,
-    },
-  ];
-
-  setEvents(dummyEvents);
+  const fetchInitial = async () => {
+    try {
+      const res = await api.get("/api/events");
+      if (res.data.success) setEvents(res.data.events || []);
+    } catch (err) {
+      console.error("로드 에러:", err);
+      setEvents([]);
+    }
+  };
+  fetchInitial();
 }, []);
+
 
   // 정렬
   const statusMap = {

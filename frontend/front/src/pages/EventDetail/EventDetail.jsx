@@ -47,7 +47,7 @@ const EventDetail = () => {
   // 좋아요
   const handleLike = async () => {
     try {
-      const res = await axios.post(
+      const res = await api.post(
         `/api/events/${id}/likes/toggle`
       );
 
@@ -64,7 +64,7 @@ const EventDetail = () => {
   // 북마크
   const handleBookmark = async () => {
     try {
-      const res = await axios.post(
+      const res = await api.post(
         `/api/events/${id}/bookmarks/toggle`
       );
 
@@ -86,7 +86,7 @@ const EventDetail = () => {
     }
 
     try {
-      const res = await axios.post(
+      const res = await api.post(
         `/api/events/${id}/reviews`,
         {
           content: reviewContent,
