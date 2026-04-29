@@ -37,10 +37,10 @@ async def daily_sync_job() -> None:
             logger.exception("daily sync failed")
 
 
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     async with async_engine.begin() as conn:
-#         await conn.run_sync(Base.metadata.create_all)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
     # 매일 새벽 3시에 공공데이터 동기화 실행
     # scheduler.add_job(
@@ -53,13 +53,13 @@ async def daily_sync_job() -> None:
     # )
     # scheduler.start()
 
-    #동기화 즉시실행
+    # 동기화 즉시실행
     # await daily_sync_job()
 
-    # yield
+    yield
 
-    # # scheduler.shutdown(wait=False)
-    # await async_engine.dispose()
+    # scheduler.shutdown(wait=False)
+    await async_engine.dispose()
 
 
 app = FastAPI(lifespan=lifespan)
