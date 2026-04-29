@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from './../../api';
 
@@ -13,6 +13,8 @@ const EventDetail = () => {
 
   const [reviewContent, setReviewContent] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const mapRef = useRef(null);
 
   // 전체 데이터
   useEffect(() => {
@@ -43,6 +45,40 @@ const EventDetail = () => {
 
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    if (!event?.mapx || !event?.mapy) return;
+    if (!mapRef.current) return;
+
+    const initMap = () => {
+      const position = new window.naver.maps.LatLng(event.mapy, event.mapx); // (위도, 경도)
+
+      const map = new window.naver.maps.Map(mapRef.current, {
+        center: position,
+        zoom: 15,
+      });
+
+      new window.naver.maps.Marker({
+        position,
+        map,
+      });
+    };
+
+    if (window.naver?.maps) {
+      initMap();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${import.meta.env.VITE_NAVER_MAP_CLIENT_ID}`;
+    script.async = true;
+    script.onload = initMap;
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, [event]);
 
   // 좋아요
   const handleLike = async () => {
@@ -120,11 +156,11 @@ const EventDetail = () => {
 
         {/* 정보 */}
         <div className="flex-1 space-y-2 text-sm">
+          <p>행사 이름 : {event.title}</p>
           <p>행사 장소 : {event.addr1}</p>
-          <p>행사 홈페이지 : {event.event_homepage}</p>
+          <p>행사 홈페이지 : {event.homepage?.trim() ? event.homepage : "-- --"}</p>
           <p>행사 연락처 : {event.tel}</p>
           <p>행사 진행 시간 : {event.play_time}</p>
-          <p>이용 시간 : {event.use_time}</p>
           <p>행사 프로그램 : {event.program}</p>
           <p>주최자 : {event.sponsor1}</p>
           <p>주최자 연락처 : {event.sponsor1_tel}</p>
@@ -133,9 +169,8 @@ const EventDetail = () => {
 
       {/* 지도 + 버튼 */}
       <div className="mt-8">
-        <div className="w-full h-[200px] bg-gray-200 flex items-center justify-center">
-          지도 들어갈 자리
-        </div>
+        <div ref={mapRef} className="w-full h-[300px] mx-auto rounded overflow-hidden" />
+
 
         <div className="flex justify-end gap-4 mt-3 text-lg">
           <button

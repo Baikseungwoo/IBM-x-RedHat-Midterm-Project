@@ -16,7 +16,6 @@ def _review_to_dict(review) -> dict:
         "user_id": review.user_id,
         "content_id": review.content_id,
         "content": review.content,
-        "rating": review.rating,
         "created_at": review.created_at,
         "updated_at": review.updated_at,
     }
@@ -38,7 +37,6 @@ async def create_review_service(
         user_id=user_id,
         content_id=content_id,
         content=payload.content.strip(),
-        rating=payload.rating,
     )
     if review is None:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -52,7 +50,7 @@ async def update_review_service(
     review_id: int,
     payload: ReviewUpdate,
 ) -> dict:
-    if payload.content is None and payload.rating is None:
+    if payload.content is None :
         raise HTTPException(status_code=400, detail="No fields to update")
 
     content = payload.content.strip() if payload.content is not None else None
@@ -61,7 +59,6 @@ async def update_review_service(
         review_id=review_id,
         user_id=user_id,
         content=content,
-        rating=payload.rating,
     )
     if review is None:
         raise HTTPException(status_code=404, detail="Review not found or no permission")
