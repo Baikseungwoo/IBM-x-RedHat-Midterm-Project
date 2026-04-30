@@ -94,6 +94,7 @@ const ProfileSection = ({ user, setUser }) => {
         }
     };
 
+
     // 3. 이메일 버튼 로직
     const handleEmailBtn = async () => {
         if (emailMode === "view") {

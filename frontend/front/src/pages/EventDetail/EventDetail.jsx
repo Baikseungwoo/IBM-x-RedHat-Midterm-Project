@@ -1,228 +1,104 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from './../../api';
+import EventInfo from "./EventInfo";
+import EventMap from "./EventMap";
+import EventReviewSection from "./EventReviewSection";
 
 const EventDetail = () => {
   const { id } = useParams();
 
   const [event, setEvent] = useState(null);
-  const [reviews, setReviews] = useState([]);
-
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
-
-  const [reviewContent, setReviewContent] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const mapRef = useRef(null);
+  // --- 데이터 초기 로드 ---
+const fetchData = async () => {
+  setLoading(true);
+  try {
+  // 1. 공통 정보(로그인 상관 없음)는 먼저 가져옴
+    const eventRes = await api.get(`/api/events/${id}`);
+    setEvent(eventRes.data.event);
 
-  // 전체 데이터
+  // 2. 인증이 필요한 정보는 별도로 처리 (실패해도 무방)
+  try {
+    const [likeRes, bookmarkRes] = await Promise.all([
+      api.get(`/api/events/${id}/likes/me`),
+      api.get(`/api/events/${id}/bookmarks/me`),
+    ]);
+    setLiked(likeRes.data.liked);
+    setBookmarked(bookmarkRes.data.bookmarked);
+  } catch (authErr) {
+  // 로그인 안 된 경우 기본값 유지
+    setLiked(false);
+    setBookmarked(false);
+    }
+  } catch (err) {
+    console.error("데이터 로드 에러:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [eventRes, likeRes, bookmarkRes, reviewRes] =
-          await Promise.all([
-            api.get(`/api/events/${id}`),
-            api.get(`/api/events/${id}/likes/me`),
-            api.get(`/api/events/${id}/bookmarks/me`),
-            api.get(`/api/events/${id}/reviews`),
-          ]);
-
-        setEvent(eventRes.data.event);
-        setLiked(likeRes.data.liked);
-        setBookmarked(bookmarkRes.data.bookmarked);
-        setReviews(reviewRes.data.reviews || []);
-      } catch (err) {
-        console.error(err);
-
-        // 로그인 안했을 경우
-        setLiked(false);
-        setBookmarked(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, [id]);
 
-  useEffect(() => {
-    if (!event?.mapx || !event?.mapy) return;
-    if (!mapRef.current) return;
-
-    const initMap = () => {
-      const position = new window.naver.maps.LatLng(event.mapy, event.mapx); // (위도, 경도)
-
-      const map = new window.naver.maps.Map(mapRef.current, {
-        center: position,
-        zoom: 15,
-      });
-
-      new window.naver.maps.Marker({
-        position,
-        map,
-      });
-    };
-
-    if (window.naver?.maps) {
-      initMap();
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${import.meta.env.VITE_NAVER_MAP_CLIENT_ID}`;
-    script.async = true;
-    script.onload = initMap;
-    document.head.appendChild(script);
-
-    return () => {
-      document.head.removeChild(script);
-    };
-  }, [event]);
-
-  // 좋아요
+  // --- 좋아요 토글 핸들러 ---
   const handleLike = async () => {
     try {
-      const res = await api.post(
-        `/api/events/${id}/likes/toggle`
-      );
-
+      const res = await api.post(`/api/events/${id}/likes/toggle`);
       setLiked(res.data.liked);
+      // 좋아요 수 실시간 업데이트
       setEvent((prev) => ({
         ...prev,
         like_count: res.data.like_count,
       }));
     } catch (err) {
-      console.error(err);
+      alert("로그인이 필요한 서비스입니다.");
     }
   };
 
-  // 북마크
+  // --- 북마크 토글 핸들러 ---
   const handleBookmark = async () => {
     try {
-      const res = await api.post(
-        `/api/events/${id}/bookmarks/toggle`
-      );
-
+      const res = await api.post(`/api/events/${id}/bookmarks/toggle`);
       setBookmarked(res.data.bookmarked);
+      // 북마크 수 실시간 업데이트
       setEvent((prev) => ({
         ...prev,
         bookmark_count: res.data.bookmark_count,
       }));
     } catch (err) {
-      console.error(err);
+      alert("로그인이 필요한 서비스입니다.");
     }
   };
 
-  // 리뷰 작성
-  const handleSubmitReview = async () => {
-    if (!reviewContent.trim()) {
-      alert("리뷰 내용을 입력하세요");
-      return;
-    }
-
-    try {
-      const res = await api.post(
-        `/api/events/${id}/reviews`,
-        {
-          content: reviewContent,
-        }
-      );
-
-      setReviews((prev) => [res.data.review, ...prev]);
-      setReviewContent("");
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  if (loading) return <div>로딩중...</div>;
-  if (!event) return <div>데이터 없음</div>;
+  if (loading) return <div className="py-20 text-center font-bold text-gray-400 animate-pulse">데이터를 불러오는 중입니다...</div>;
+  if (!event) return <div className="py-20 text-center font-bold text-red-400">행사 정보를 찾을 수 없습니다.</div>;
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="max-w-5xl mx-auto p-10 min-h-screen bg-white">
+      
+      {/* 1. 상단 정보 섹션 (행사정보 + 좋아요/북마크) */}
+      <EventInfo 
+        event={event} 
+        liked={liked} 
+        bookmarked={bookmarked} 
+        onLike={handleLike} 
+        onBookmark={handleBookmark} 
+      />
 
-      {/* 상단 */}
-      <div className="flex gap-8">
+      <hr className="my-12 border-gray-100" />
 
-        {/* 이미지 */}
-        <div className="w-[400px] h-[250px] bg-gray-300">
-          <img
-            src={event.first_image || "/no-image.png"}
-            alt={event.title}
-            className="w-full h-full object-cover"
-          />
-        </div>
+      {/* 2. 지도 섹션 */}
+      <EventMap event={event} />
 
-        {/* 정보 */}
-        <div className="flex-1 space-y-2 text-sm">
-          <p>행사 이름 : {event.title}</p>
-          <p>행사 장소 : {event.addr1}</p>
-          <p>행사 홈페이지 : {event.homepage?.trim() ? event.homepage : "-- --"}</p>
-          <p>행사 연락처 : {event.tel}</p>
-          <p>행사 진행 시간 : {event.play_time}</p>
-          <p>행사 프로그램 : {event.program}</p>
-          <p>주최자 : {event.sponsor1}</p>
-          <p>주최자 연락처 : {event.sponsor1_tel}</p>
-        </div>
-      </div>
+      <hr className="my-12 border-gray-100" />
 
-      {/* 지도 + 버튼 */}
-      <div className="mt-8">
-        <div ref={mapRef} className="w-full h-[300px] mx-auto rounded overflow-hidden" />
-
-
-        <div className="flex justify-end gap-4 mt-3 text-lg">
-          <button
-            onClick={handleLike}
-            className={liked ? "text-red-500" : ""}
-          >
-            ♡ {event.like_count}
-          </button>
-
-          <button
-            onClick={handleBookmark}
-            className={bookmarked ? "text-blue-500" : ""}
-          >
-            🔖 {event.bookmark_count}
-          </button>
-        </div>
-      </div>
-
-      {/* 리뷰 작성 */}
-      <div className="mt-10">
-        <h2 className="text-lg font-semibold mb-2">리뷰 작성</h2>
-
-        <textarea
-          value={reviewContent}
-          onChange={(e) => setReviewContent(e.target.value)}
-          className="w-full border p-2"
-          placeholder="리뷰를 입력하세요"
-        />
-
-        <button
-          onClick={handleSubmitReview}
-          className="mt-3 px-4 py-2 bg-blue-500 text-white"
-        >
-          등록
-        </button>
-      </div>
-
-      {/* 리뷰 목록 */}
-      <div className="mt-10">
-        <h2 className="text-lg font-semibold mb-4">리뷰 목록</h2>
-
-        {reviews.length > 0 ? (
-          reviews.map((r) => (
-            <div key={r.review_id} className="border-b py-3">
-              <p className="font-bold">{r.nickname}</p>
-              <p>{r.content}</p>
-            </div>
-          ))
-        ) : (
-          <p>리뷰가 없습니다.</p>
-        )}
-      </div>
+      {/* 3. 리뷰 섹션 (리뷰 작성 + 목록) */}
+      <EventReviewSection eventId={id} />
 
     </div>
   );
