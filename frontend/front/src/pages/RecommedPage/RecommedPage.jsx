@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../api'; 
 import Modal from '../../components/modal'; 
 
@@ -18,7 +18,23 @@ const RecommendPage = () => {
   const [isSaving, setIsSaving] = useState(false); 
   const [recommendResult, setRecommendResult] = useState(null);
 
-  // --- [API 1] AI 추천 코스 요청 (POST /api/courses/recommend) ---
+  // --- [추가] 로드 시 로컬스토리지에서 데이터 불러오기 ---
+  useEffect(() => {
+    const savedCourse = localStorage.getItem('last_recommend_result');
+    const savedInputs = localStorage.getItem('last_recommend_inputs');
+
+    if (savedCourse) {
+      setRecommendResult(JSON.parse(savedCourse));
+    }
+    if (savedInputs) {
+      const { region, date, keyword } = JSON.parse(savedInputs);
+      setSelectedRegion(region || '');
+      setSelectedDate(date || '');
+      setKeyword(keyword || '');
+    }
+  }, []);
+
+  // --- [API 1] AI 추천 코스 요청 ---
   const getAIRecommendation = async () => {
     if (!selectedRegion || !selectedDate || !keyword) {
       alert("지역, 날짜, 키워드를 모두 입력해주세요!");
@@ -37,6 +53,14 @@ const RecommendPage = () => {
 
       if (response.data.success) {
         setRecommendResult(response.data);
+        
+        // --- [추가] 성공 시 로컬스토리지에 저장 ---
+        localStorage.setItem('last_recommend_result', JSON.stringify(response.data));
+        localStorage.setItem('last_recommend_inputs', JSON.stringify({
+          region: selectedRegion,
+          date: selectedDate,
+          keyword: keyword
+        }));
       } else {
         alert("추천 결과를 가져오지 못했습니다.");
       }
@@ -48,7 +72,7 @@ const RecommendPage = () => {
     }
   };
 
-  // --- [API 2] AI 추천 코스 저장 (POST /api/courses) ---
+  // --- [API 2] AI 추천 코스 저장 (저장 성공 후에는 스토리지 비우기 선택 사항) ---
   const handleSaveCourse = async () => {
     if (!recommendResult) return;
 
@@ -70,6 +94,8 @@ const RecommendPage = () => {
       
       if (response.data.success) {
         alert("나의 코스에 성공적으로 저장되었습니다! 마이페이지에서 확인하세요.");
+        // 저장 완료 후 스토리지를 비우고 싶다면 아래 주석 해제
+        // localStorage.removeItem('last_recommend_result');
       }
     } catch (error) {
       console.error("코스 저장 API 에러:", error);
@@ -80,6 +106,7 @@ const RecommendPage = () => {
   };
 
   return (
+    // ... JSX 코드는 동일
     <div className="w-full min-h-screen bg-white py-16 px-10">
       <div className="max-w-[1200px] mx-auto flex flex-col items-center">
         

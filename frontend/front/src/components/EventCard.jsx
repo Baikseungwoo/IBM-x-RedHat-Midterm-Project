@@ -20,6 +20,8 @@ const EventCard = ({ event, onClick, onLike, onBookmark }) => {
     const start = new Date(event.start_date);
     const end = new Date(event.end_date);
 
+    end.setHours(23, 59, 59, 999);
+
     if (now < start) return { text: "진행 예정", color: "bg-blue-500" };
     if (now <= end) return { text: "진행 중", color: "bg-green-500" };
     return { text: "진행 종료", color: "bg-gray-400" };
