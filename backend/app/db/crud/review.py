@@ -25,7 +25,6 @@ async def list_reviews_by_content_id(db: AsyncSession, content_id: int) -> list[
                 "user_id": review.user_id,
                 "content_id": review.content_id,
                 "content": review.content,
-                "rating": review.rating,
                 "created_at": review.created_at,
                 "updated_at": review.updated_at,
                 "nickname": nickname,
@@ -39,7 +38,6 @@ async def create_review(
     user_id: int,
     content_id: int,
     content: str,
-    rating: int,
 ) -> Review | None:
     event = await db.get(Event, content_id)
     if not event:
@@ -49,7 +47,6 @@ async def create_review(
         user_id=user_id,
         content_id=content_id,
         content=content,
-        rating=rating,
     )
     db.add(review)
     await db.commit()
@@ -62,7 +59,6 @@ async def update_review(
     review_id: int,
     user_id: int,
     content: Optional[str],
-    rating: Optional[int],
 ) -> Review | None:
     stmt = select(Review).where(Review.review_id == review_id, Review.user_id == user_id)
     review = (await db.execute(stmt)).scalar_one_or_none()
@@ -71,8 +67,7 @@ async def update_review(
 
     if content is not None:
         review.content = content
-    if rating is not None:
-        review.rating = rating
+
 
     await db.commit()
     await db.refresh(review)

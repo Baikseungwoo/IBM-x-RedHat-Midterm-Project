@@ -1,14 +1,95 @@
 import React, { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Modal = ({ courseData }) => {
   const mapRef = useRef(null);
-
+  const naverMapRef = useRef(null);
+  const navigate = useNavigate();
   useEffect(() => {
     if (courseData && mapRef.current) {
 
       mapRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [courseData]);
+  
+  useEffect(() => {
+    if (!courseData?.course?.length) return;
+    if (!mapRef.current) return;
+
+    const points = courseData.course
+      .filter(c => c.mapx && c.mapy)
+      .map(c => ({
+        lat: Number(c.mapy), // 위도
+        lng: Number(c.mapx), // 경도
+        title: c.title,
+      }));
+
+    if (!points.length) return;
+
+    const initMap = () => {
+      const first = points[0];
+      const map = new window.naver.maps.Map(mapRef.current, {
+        center: new window.naver.maps.LatLng(first.lat, first.lng),
+        zoom: 12,
+      });
+
+      const bounds = new window.naver.maps.LatLngBounds();
+
+      points.forEach((p, idx) => {
+        const pos = new window.naver.maps.LatLng(p.lat, p.lng);
+        bounds.extend(pos);
+
+        const marker = new window.naver.maps.Marker({
+          position: pos,
+          map,
+          title: p.title,
+        });
+
+        const infoWindow = new window.naver.maps.InfoWindow({
+          content: `
+            <div style="
+              padding:8px 10px;
+              font-size:12px;
+              font-weight:600;
+              white-space:nowrap;
+            ">
+              ${idx + 1}. ${p.title}
+            </div>
+          `,
+          borderWidth: 1,
+          backgroundColor: "#fff",
+          anchorSize: new window.naver.maps.Size(10, 10),
+        });
+
+        window.naver.maps.Event.addListener(marker, "mouseover", () => {
+          infoWindow.open(map, marker);
+        });
+
+        window.naver.maps.Event.addListener(marker, "mouseout", () => {
+          infoWindow.close();
+        });
+      });
+
+      map.fitBounds(bounds);
+      naverMapRef.current = map;
+    };
+
+    if (window.naver?.maps) {
+      initMap();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${import.meta.env.VITE_NAVER_MAP_CLIENT_ID}`;
+    script.async = true;
+    script.onload = initMap;
+    document.head.appendChild(script);
+
+    return () => {
+      // 모달 여러 번 열 때 스크립트 중복 방지하려면 제거 안 하는 방식 추천
+    };
+  }, [courseData]);
+
 
   if (!courseData) {
     return (
@@ -40,7 +121,8 @@ const Modal = ({ courseData }) => {
       <div className="relative flex items-center justify-center gap-10 mb-12">
         {courseData.course.map((item, idx) => (
           <React.Fragment key={item.content_id}>
-            <div className="relative flex-1 bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 group cursor-pointer hover:shadow-xl transition-all">
+            <div className="relative flex-1 bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 group cursor-pointer hover:shadow-xl transition-all"
+            onClick={() => navigate(`/events/${item.content_id}`)}>
               <div className="relative aspect-[16/10] rounded-2xl overflow-hidden mb-4 shadow-inner">
                 <img src={item.first_image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 <div className="absolute top-3 left-3 bg-[#0369A1] text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg shadow-md">
