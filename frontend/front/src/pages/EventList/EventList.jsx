@@ -1,177 +1,195 @@
 import React, { useEffect, useState } from "react";
-import api from "../../api";
+import api from "../../api"; 
 import EventCard from "../../components/EventCard";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const EventList = () => {
-  const [events, setEvents] = useState([]);
+  const [allEvents, setAllEvents] = useState([]);
+  const [displayEvents, setDisplayEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [region, setRegion] = useState("전체");
   const [keyword, setKeyword] = useState("");
   const [sort, setSort] = useState("latest");
-
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // 지역받기
-  const regionParam = searchParams.get("region");
-
-  useEffect(() => {
-    if (regionParam) {
-      setRegion(regionParam);
-    }
-  }, [regionParam]);
-
-  useEffect(() => {
-  const fetchInitial = async () => {
-    try {
-      const res = await api.get("/api/events");
-      if (res.data.success) setEvents(res.data.events || []);
-    } catch (err) {
-      console.error("로드 에러:", err);
-      setEvents([]);
-    }
-  };
-  fetchInitial();
-}, []);
-
-
-  // 정렬
   const statusMap = {
     latest: "",
-    likes: "likes",
-    ongoing: "ongoing",
-    ended: "ended",
+    likes: "",
+    ongoing: "진행중",
+    upcoming: "예정",
+    ended: "종료",
   };
 
-  // 이벤트 요청
+  useEffect(() => {
+    const regionParam = searchParams.get("region");
+    if (regionParam) setRegion(regionParam);
+  }, [searchParams]);
+
   const fetchEvents = async () => {
+    setLoading(true);
     try {
-      const res = await axios.get("/api/events/filter", {
+      const res = await api.get("/api/events/filter", {
         params: {
-          ...(region !== "전체" && { region }),
-          ...(keyword && { keyword }),
-          ...(statusMap[sort] && { status: statusMap[sort] }),
-          ...(startDate && { start_date: startDate }),
-          ...(endDate && { end_date: endDate }),
+          region: region === "전체" ? undefined : region,
+          keyword: keyword.trim() || undefined,
+          status: statusMap[sort] || undefined,
+          start_date_param: startDate || undefined,
+          end_date_param: endDate || undefined,
         },
       });
 
-      setEvents(res.data?.events || []);
+      if (res.data) {
+        let fetchedData = res.data.events || res.data || [];
+        
+        fetchedData.sort((a, b) => {
+          if (sort === "likes") {
+            if ((b.like_count || 0) !== (a.like_count || 0)) return (b.like_count || 0) - (a.like_count || 0);
+          }
+          return new Date(b.start_date) - new Date(a.start_date);
+        });
+        setAllEvents(fetchedData);
+        setPage(1);
+      }
     } catch (err) {
       console.error(err);
-      setEvents([]);
+      setAllEvents([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  /*
-  // 
+  const handleLike = async (e, contentId) => {
+    e.stopPropagation();
+    try {
+      const res = await api.post(`/api/events/${contentId}/likes/toggle`);
+      if (res.data.success) {
+        setAllEvents(prev => prev.map(ev => 
+          ev.content_id === contentId 
+            ? { 
+                ...ev, 
+                like_count: res.data.like_count, 
+                is_liked: res.data.liked // 백엔드 리턴 필드 liked
+              } 
+            : ev
+        ));
+      }
+    } catch (err) {
+      console.error("좋아요 처리 실패");
+    }
+  };
+
+  const handleBookmark = async (e, contentId) => {
+    e.stopPropagation();
+    try {
+      const res = await api.post(`/api/events/${contentId}/bookmarks/toggle`);
+      if (res.data.success) {
+        setAllEvents(prev => prev.map(ev => 
+          ev.content_id === contentId 
+            ? { ...ev, is_bookmarked: res.data.bookmarked } // 백엔드 리턴 필드 bookmarked
+            : ev
+        ));
+      }
+    } catch (err) {
+      console.error("북마크 처리 실패");
+    }
+  };
+
   useEffect(() => {
-    const delay = setTimeout(() => {
-      fetchEvents();
-    }, 300);
-
+    const delay = setTimeout(fetchEvents, 300);
     return () => clearTimeout(delay);
-  }, [region, keyword, sort, startDate, endDate]);*/
+  }, [region, keyword, sort, startDate, endDate]);
 
-  // 지역 리스트
-  const regions = [
-    "전체",
-    "서울",
-    "경기",
-    "강원",
-    "충남",
-    "충북",
-    "전남",
-    "전북",
-    "경북",
-    "경남",
-    "제주",
-  ];
-  
+  useEffect(() => {
+    const startIndex = (page - 1) * pageSize;
+    setDisplayEvents(allEvents.slice(startIndex, startIndex + pageSize));
+  }, [allEvents, page]);
+
+  const totalPages = Math.ceil(allEvents.length / pageSize);
 
   return (
-    <div className="p-6">
+    <div className="max-w-[1440px] mx-auto p-10 min-h-screen bg-white">
+      <div className="mb-12">
+        <h1 className="text-4xl font-black text-gray-900 tracking-tight">전국 행사 목록</h1>
+        <p className="text-gray-400 mt-2 font-medium italic">총 {allEvents.length}개의 행사가 검색되었습니다.</p>
+      </div>
 
-      {/* 상단 UI */}
-      <div className="flex items-center justify-between mb-8">
-
-        {/* 왼쪽 */}
-        <div className="flex items-center gap-4">
-
-          {/* 지역 */}
-          <button className="text-2xl font-bold flex items-center gap-1">
-            {region}
-            <span>▼</span>
-          </button>
-
-          {/* 검색 */}
-          <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 w-[350px]">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-6 mb-12 bg-gray-50 p-6 rounded-[32px] border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-6">
+          <select 
+            value={region} 
+            onChange={(e) => setRegion(e.target.value)}
+            className="text-2xl font-bold bg-transparent outline-none cursor-pointer"
+          >
+            {["전체", "서울", "경기도", "강원도", "충청북도", "충청남도", "전라북도", "전라남도", "경상북도", "경상남도", "제주도"].map(r => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+          <div className="flex items-center bg-white rounded-full px-6 py-3 w-[400px] shadow-sm border border-transparent focus-within:border-blue-400 transition-all">
             <input
               type="text"
-              placeholder="행사를 검색하세요"
+              placeholder="행사명 검색..."
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              className="flex-1 bg-transparent outline-none text-sm"
+              className="flex-1 bg-transparent outline-none text-sm font-bold"
             />
-            {keyword && (
-              <button onClick={() => setKeyword("")}>✕</button>
-            )}
-            <button>🔍</button>
           </div>
         </div>
 
-        {/* 오른쪽 */}
-        <div className="flex items-center gap-3">
-
-          {/* 날짜 */}
-          <div className="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-2 text-sm">
-            📅
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="bg-transparent outline-none"
-            />
-            ~
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="bg-transparent outline-none"
-            />
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 bg-white px-4 py-3 rounded-full shadow-sm text-sm font-bold text-gray-600">
+            <span>📅</span>
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-transparent outline-none" />
+            <span className="text-gray-200">~</span>
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-transparent outline-none" />
           </div>
-
-          {/* 정렬 (UI만) */}
-          <div className="bg-gray-100 rounded-full px-4 py-2 text-sm cursor-pointer">
-            정렬 ▼
-          </div>
+          <select 
+            value={sort} 
+            onChange={(e) => setSort(e.target.value)}
+            className="bg-white px-6 py-3 rounded-full shadow-sm text-sm font-black text-blue-600 outline-none cursor-pointer"
+          >
+            <option value="latest">최신순</option>
+            <option value="likes">인기순</option>
+            <option value="upcoming">진행 예정</option>
+            <option value="ongoing">진행중</option>
+            <option value="ended">종료됨</option>
+          </select>
         </div>
       </div>
 
-      {/* 카드 리스트 */}
-      <div className="grid grid-cols-3 gap-6">
-        {events.length > 0 ? (
-          events.map((event) => (
-            <EventCard
-              key={event.content_id}
-              event={event}
+      {loading ? (
+        <div className="py-40 text-center text-gray-400 font-bold animate-pulse">로딩 중...</div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          {displayEvents.map((event) => (
+            <EventCard 
+              key={event.content_id} 
+              event={event} 
               onClick={() => navigate(`/events/${event.content_id}`)}
+              onLike={handleLike}
+              onBookmark={handleBookmark}
             />
-          ))
-        ) : (
-          <p className="text-gray-400 col-span-3 text-center">
-            결과가 없습니다.
-          </p>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* 페이지네이션 */}
-      <div className="mt-10 text-center text-gray-500">
-        1 2 3 4 5
+      <div className="mt-24 flex justify-center items-center gap-6">
+        {Array.from({ length: totalPages }, (_, i) => (
+          <button
+            key={i + 1}
+            onClick={() => { setPage(i + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            className={`text-xl font-black transition-all ${page === i + 1 ? "text-blue-600 scale-125 border-b-4 border-blue-600" : "text-gray-300 hover:text-gray-500"}`}
+          >
+            {i + 1}
+          </button>
+        ))}
       </div>
     </div>
   );

@@ -1,2 +1,7 @@
 backend/.env
+
+# 파이썬 관련
+__pycache__/
+*.py[cod]
+*$py.class
 frontend/front/.env

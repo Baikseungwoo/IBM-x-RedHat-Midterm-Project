@@ -7,7 +7,7 @@ const Header = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); 
   const navigate = useNavigate();
 
-  const [isLoggedIn, setIsLoggedIn] = useState(true); //로그인 시 프로필 클릭 (우선 True 추후 변경)
+  const [isLoggedIn, setIsLoggedIn] = useState(true); 
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -21,19 +21,13 @@ const Header = () => {
   };
 
   const handleProfileClick = (e) => {
-    e.preventDefault(); 
-    if (isLoggedIn) {
-      navigate('/mypage'); 
+
+    if (!isLoggedIn) {
+      alert("로그인이 필요한 서비스입니다.");   
+      navigate('/login');   
     } else {
-      alert("로그인이 필요한 서비스입니다.");
-      navigate('/login');
+      setIsModalOpen(!isModalOpen);
     }
-    // if (!isLoggedIn) {
-    //   alert("로그인이 필요한 서비스입니다.");   // 여기도 로그인 구현 후 수정
-    //   navigate('/login');   
-    // } else {
-    //   setIsModalOpen(!isModalOpen);
-    // }
   };
 
   const handleLogout = () => {
