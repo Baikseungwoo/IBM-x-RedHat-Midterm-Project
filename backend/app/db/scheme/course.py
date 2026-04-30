@@ -70,7 +70,7 @@ class MyCourseItem(BaseModel):
 
 class MyCoursesResponse(BaseModel):
     success: bool
-    courses: list[MyCourseItem]
+    courses: list[CourseRecommendResponse]
 
 
 class DeleteCourseResponse(BaseModel):

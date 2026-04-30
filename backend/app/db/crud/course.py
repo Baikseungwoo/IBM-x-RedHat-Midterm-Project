@@ -110,18 +110,21 @@ async def list_my_courses(db: AsyncSession, user_id: int) -> list[dict]:
     )
     courses = (await db.execute(stmt)).scalars().all()
 
-    return [
-        {
-            "course_id": c.course_id,
-            "region": c.region,
-            "course_title": c.course_title,
-            "description": c.description,
-            "date": c.date,
-            "keyword": c.keyword,
-            "created_at": c.created_at,
-        }
-        for c in courses
-    ]
+    result = []
+    for c in courses:
+        items = await list_course_items(db, c.course_id)  # 이미 추천 item과 같은 키들 반환
+        result.append(
+            {
+                "success": True,
+                "course_title": c.course_title,
+                "region": c.region,
+                "date": c.date,
+                "keyword": c.keyword,
+                "description": c.description,
+                "course": items,
+            }
+        )
+    return result
 
 
 async def delete_my_course(db: AsyncSession, user_id: int, course_id: int) -> bool:

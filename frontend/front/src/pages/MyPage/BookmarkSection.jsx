@@ -8,8 +8,11 @@ const BookmarkSection = ({ bookmarks }) => {
             </div>
             <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
                 {bookmarks.map((item) => (
-                    <div key={item.content_id} className="min-w-[220px] bg-white rounded-3xl shadow-sm border border-gray-100 p-3 relative group">
-                        <div className="aspect-[4/3] rounded-2xl overflow-hidden mb-3 bg-gray-100">
+                    <div
+                    key={item.content_id}
+                    className="w-[260px] flex-none bg-white rounded-3xl shadow-sm border border-gray-100 p-3 relative group"
+                    >
+                        <div className="aspect-[3/2] w-full rounded-2xl overflow-hidden mb-3 bg-gray-100">
                             <img src={item.first_image} className="w-full h-full object-cover" />
                         </div>
                         <p className="font-bold text-sm truncate px-1">{item.title}</p>
