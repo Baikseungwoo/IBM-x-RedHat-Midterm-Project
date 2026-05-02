@@ -38,6 +38,8 @@ class EventSearchItem(BaseModel):
 class EventAutocompleteItem(BaseModel):
     content_id: int
     title: str
+    region: Optional[str] = None
+    thumbnail: Optional[str] = None
 
 
 class EventDetailData(BaseModel):

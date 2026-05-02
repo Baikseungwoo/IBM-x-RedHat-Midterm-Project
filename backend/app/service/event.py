@@ -2,7 +2,7 @@ from datetime import date
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, or_, select, case
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.event import Event
@@ -194,12 +194,37 @@ async def autocomplete_events(db: AsyncSession, keyword: str) -> dict:
     if not kw:
         return {"success": True, "events": []}
 
+    starts_with_keyword = case(
+        (Event.title.ilike(f"{kw}%"), 0),
+        else_=1,
+    )
+
     stmt = (
-        select(Event.content_id, Event.title)
+        select(
+            Event.content_id,
+            Event.title,
+            Event.region,
+            Event.first_image,
+        )
         .where(Event.title.ilike(f"%{kw}%"))
-        .order_by(Event.like_count.desc(), Event.title.asc())
+        .order_by(
+            starts_with_keyword.asc(),
+            Event.like_count.desc(),
+            Event.title.asc(),
+        )
         .limit(10)
     )
+
     rows = (await db.execute(stmt)).all()
-    events = [{"content_id": r[0], "title": r[1]} for r in rows]
+
+    events = [
+        {
+            "content_id": r[0],
+            "title": r[1],
+            "region": r[2],
+            "thumbnail": r[3],
+        }
+        for r in rows
+    ]
+
     return {"success": True, "events": events}
