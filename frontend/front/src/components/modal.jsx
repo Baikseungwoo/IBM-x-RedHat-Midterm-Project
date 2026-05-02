@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Modal = ({ courseData }) => {
+const Modal = ({ courseData, variant = 'page' }) => {
+  const isPopup = variant === 'popup';
   const mapRef = useRef(null);
   const naverMapRef = useRef(null);
   const navigate = useNavigate();
@@ -106,9 +107,16 @@ const Modal = ({ courseData }) => {
   }
 
   return (
-    <div className="w-full p-10 bg-[#E5E7EB]/50 backdrop-blur-xl rounded-[60px] border border-white shadow-inner animate-fadeInUp">
+    <div
+      className={`w-full bg-[#E5E7EB]/50 backdrop-blur-xl border border-white shadow-inner animate-fadeInUp ${
+        isPopup
+          ? 'p-6 rounded-[28px]'
+          : 'p-10 rounded-[60px]'
+      }`}
+    >
+
       <div className="mb-10 text-center relative flex flex-col items-center">
-        <h2 className="text-3xl font-black text-gray-900 leading-tight mb-2">
+        <h2 className={`${isPopup ? 'text-2xl' : 'text-3xl'} font-black text-gray-900 leading-tight mb-2`}>
           {courseData.course_title}
         </h2>
         <div className="flex gap-2 text-xs font-bold text-blue-600 bg-blue-100 px-4 py-1 rounded-full uppercase">
@@ -118,10 +126,14 @@ const Modal = ({ courseData }) => {
         </div>
       </div>
 
-      <div className="relative flex items-center justify-center gap-10 mb-12">
+      <div className={`relative flex items-center justify-center mb-12 ${
+        isPopup ? 'gap-4' : 'gap-10'
+      }`}>
         {courseData.course.map((item, idx) => (
           <React.Fragment key={item.content_id}>
-            <div className="relative flex-1 bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 group cursor-pointer hover:shadow-xl transition-all"
+            <div className={`relative flex-1 bg-white rounded-[32px] shadow-sm border border-gray-100 group cursor-pointer hover:shadow-xl transition-all ${
+              isPopup ? 'p-3' : 'p-6'
+            }`}
             onClick={() => navigate(`/events/${item.content_id}`)}>
               <div className="relative aspect-[16/10] rounded-2xl overflow-hidden mb-4 shadow-inner">
                 <img src={item.first_image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -157,7 +169,10 @@ const Modal = ({ courseData }) => {
           </p>
         </div>
 
-        <div className="flex-1 rounded-[32px] overflow-hidden shadow-inner border-2 border-white relative min-h-[300px]">
+        <div className={`flex-1 rounded-[32px] overflow-hidden shadow-inner border-2 border-white relative ${
+          isPopup ? 'min-h-[220px]' : 'min-h-[300px]'
+        }`}>
+
           <div ref={mapRef} className="w-full h-full bg-[#E5E3DF]">
             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gray-200/50">
               <p className="font-bold">MAP API AREA</p>

@@ -114,15 +114,17 @@ async def list_my_courses(db: AsyncSession, user_id: int) -> list[dict]:
     for c in courses:
         items = await list_course_items(db, c.course_id)  # 이미 추천 item과 같은 키들 반환
         result.append(
-            {
-                "success": True,
-                "course_title": c.course_title,
-                "region": c.region,
-                "date": c.date,
-                "keyword": c.keyword,
-                "description": c.description,
-                "course": items,
-            }
+                {
+                    "course_id": c.course_id,
+                    "user_id": c.user_id,
+                    "course_title": c.course_title,
+                    "region": c.region,
+                    "date": c.date,
+                    "keyword": c.keyword,
+                    "description": c.description,
+                    "created_at": c.created_at,
+                    "course": items,
+                }
         )
     return result
 
