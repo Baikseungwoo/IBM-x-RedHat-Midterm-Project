@@ -136,11 +136,29 @@ const Header = () => {
                           e.preventDefault();
                           handleItemClick(item.content_id);
                         }}
-                        className="px-5 py-3 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 flex justify-between items-center group"
+                        className="px-4 py-3 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 flex items-center gap-3 group"
                       >
-                        <span className="font-bold truncate group-hover:text-blue-600 transition-colors">
-                          {item.title}
-                        </span>
+                        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                          {item.thumbnail ? (
+                            <img
+                              src={item.thumbnail}
+                              alt={item.title}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-full w-full bg-gray-200" />
+                          )}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold truncate group-hover:text-blue-600 transition-colors">
+                            {item.title}
+                          </p>
+                          <p className="mt-0.5 text-xs text-gray-400">
+                            {item.region || "지역 정보 없음"}
+                          </p>
+                        </div>
+
                         <span className="text-[10px] text-gray-300 whitespace-nowrap ml-2">
                           상세보기
                         </span>

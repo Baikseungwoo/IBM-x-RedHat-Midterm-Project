@@ -86,3 +86,18 @@
 .animate-checkDraw {
   animation: checkDraw 420ms ease-out 120ms both;
 }
+
+@keyframes toastUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+.animate-toastUp {
+  animation: toastUp 180ms ease-out;
+}

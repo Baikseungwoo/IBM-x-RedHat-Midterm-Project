@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from './../../api';
 import { useAuth } from '../../contexts/AuthContext';
 import LoginRequiredModal from '../../components/LoginRequiredModal';
+import BookmarkToast from '../../components/BookmarkToast';
 
 
 const EventDetail = () => {
@@ -20,6 +21,9 @@ const EventDetail = () => {
   const [reviewContent, setReviewContent] = useState("");
   const [loading, setLoading] = useState(true);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
+
+  const [bookmarkToastOpen, setBookmarkToastOpen] = useState(false);
+ const [bookmarkToastState, setBookmarkToastState] = useState(false);
 
 
   const mapRef = useRef(null);
@@ -167,14 +171,19 @@ const EventDetail = () => {
       const res = await api.post(`/api/events/${id}/bookmarks/toggle`);
 
       setBookmarked(res.data.bookmarked);
+
       setEvent((prev) => ({
         ...prev,
         bookmark_count: res.data.bookmark_count,
       }));
+
+      setBookmarkToastState(res.data.bookmarked);
+      setBookmarkToastOpen(true);
     } catch (err) {
       console.error(err);
     }
   };
+
 
 
   // 리뷰 작성
@@ -333,6 +342,11 @@ const EventDetail = () => {
           setLoginModalOpen(false);
           navigate('/login');
         }}
+      />
+      <BookmarkToast
+        open={bookmarkToastOpen}
+        bookmarked={bookmarkToastState}
+        onClose={() => setBookmarkToastOpen(false)}
       />
     </>
   );

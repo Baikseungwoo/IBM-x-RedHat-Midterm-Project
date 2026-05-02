@@ -2,11 +2,20 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import api from "../../api"; 
 import EventCard from "../../components/EventCard";
+import BookmarkToast from "../../components/BookmarkToast";
+import { useAuth } from "../../contexts/AuthContext";
+import LoginRequiredModal from "../../components/LoginRequiredModal";
 
 const EventList = () => {
   const [allEvents, setAllEvents] = useState([]);
   const [displayEvents, setDisplayEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const { isLoggedIn } = useAuth();
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+
+  const [bookmarkToastOpen, setBookmarkToastOpen] = useState(false);
+  const [bookmarkToastState, setBookmarkToastState] = useState(false);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -23,6 +32,16 @@ const EventList = () => {
 
   const [page, setPage] = useState(1);
   const pageSize = 20;
+
+  const requireLogin = () => {
+    if (!isLoggedIn) {
+      setLoginModalOpen(true);
+      return false;
+    }
+
+    return true;
+  };
+
 
   // 🔴 URL의 region 파라미터가 변경될 때 내부 region 상태를 동기화
   useEffect(() => {
@@ -92,31 +111,54 @@ const EventList = () => {
 
   const handleLike = async (e, contentId) => {
     e.stopPropagation();
+
+    if (!requireLogin()) return;
+
     try {
       const res = await api.post(`/api/events/${contentId}/likes/toggle`);
       if (res.data.success) {
-        setAllEvents(prev => prev.map(ev => 
-          ev.content_id === contentId 
-            ? { ...ev, like_count: res.data.like_count, is_liked: res.data.liked } 
+        setAllEvents(prev => prev.map(ev =>
+          ev.content_id === contentId
+            ? {
+                ...ev,
+                like_count: res.data.like_count,
+                is_liked: res.data.liked,
+              }
             : ev
         ));
       }
-    } catch (err) { console.error("좋아요 실패"); }
+    } catch (err) {
+      console.error("좋아요 실패");
+    }
   };
+
 
   const handleBookmark = async (e, contentId) => {
     e.stopPropagation();
+
+    if (!requireLogin()) return;
+
     try {
       const res = await api.post(`/api/events/${contentId}/bookmarks/toggle`);
       if (res.data.success) {
-        setAllEvents(prev => prev.map(ev => 
-          ev.content_id === contentId 
-            ? { ...ev, is_bookmarked: res.data.bookmarked } 
+        setAllEvents(prev => prev.map(ev =>
+          ev.content_id === contentId
+            ? {
+                ...ev,
+                bookmark_count: res.data.bookmark_count,
+                is_bookmarked: res.data.bookmarked,
+              }
             : ev
         ));
+
+        setBookmarkToastState(res.data.bookmarked);
+        setBookmarkToastOpen(true);
       }
-    } catch (err) { console.error("북마크 실패"); }
+    } catch (err) {
+      console.error("북마크 실패");
+    }
   };
+
 
   useEffect(() => {
     const delay = setTimeout(fetchEvents, 300);
@@ -131,102 +173,119 @@ const EventList = () => {
   const totalPages = Math.ceil(allEvents.length / pageSize);
 
   return (
-    <div className="max-w-[1440px] mx-auto p-10 min-h-screen bg-white">
-      <div className="mb-12">
-        <h1 className="text-4xl font-black text-gray-900 tracking-tight">
-          {urlKeyword ? `"${urlKeyword}" 검색 결과` : "전국 행사 목록"}
-        </h1>
-        <p className="text-gray-400 mt-2 font-medium italic">총 {allEvents.length}개의 행사가 검색되었습니다.</p>
-      </div>
+    <>
+      <div className="max-w-[1440px] mx-auto p-10 min-h-screen bg-white">
+        <div className="mb-12">
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+            {urlKeyword ? `"${urlKeyword}" 검색 결과` : "전국 행사 목록"}
+          </h1>
+          <p className="text-gray-400 mt-2 font-medium italic">총 {allEvents.length}개의 행사가 검색되었습니다.</p>
+        </div>
 
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-6 mb-12 bg-gray-50 p-6 rounded-[32px] border border-gray-100 shadow-sm">
-        <div className="flex items-center gap-6">
-          <select 
-            value={region} 
-            onChange={(e) => {
-              const newRegion = e.target.value;
-              setRegion(newRegion);
-              // 🔴 주소창 URL 동기화 로직 추가
-              const params = new URLSearchParams(searchParams);
-              if (newRegion === "전체") {
-                params.delete("region");
-              } else {
-                params.set("region", newRegion);
-              }
-              navigate(`/events?${params.toString()}`, { replace: true });
-            }}
-            className="text-2xl font-bold bg-transparent outline-none cursor-pointer"
-          >
-            {["전체", "서울", "경기도", "강원도", "충청북도", "충청남도", "전라북도", "전라남도", "경상북도", "경상남도", "제주도"].map(r => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
-          
-          <div className="flex items-center bg-white rounded-full px-6 py-3 w-[400px] shadow-sm border border-transparent focus-within:border-blue-400 transition-all">
-            <input
-              type="text"
-              placeholder="가고 싶은 행사를 검색해 보세요"
-              defaultValue={urlKeyword}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  navigate(`/events?keyword=${encodeURIComponent(e.target.value)}`);
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 mb-12 bg-gray-50 p-6 rounded-[32px] border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-6">
+            <select 
+              value={region} 
+              onChange={(e) => {
+                const newRegion = e.target.value;
+                setRegion(newRegion);
+                // 🔴 주소창 URL 동기화 로직 추가
+                const params = new URLSearchParams(searchParams);
+                if (newRegion === "전체") {
+                  params.delete("region");
+                } else {
+                  params.set("region", newRegion);
                 }
+                navigate(`/events?${params.toString()}`, { replace: true });
               }}
-              className="flex-1 bg-transparent outline-none text-sm font-bold"
-            />
+              className="text-2xl font-bold bg-transparent outline-none cursor-pointer"
+            >
+              {["전체", "서울", "경기도", "강원도", "충청북도", "충청남도", "전라북도", "전라남도", "경상북도", "경상남도", "제주도"].map(r => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+            
+            <div className="flex items-center bg-white rounded-full px-6 py-3 w-[400px] shadow-sm border border-transparent focus-within:border-blue-400 transition-all">
+              <input
+                type="text"
+                placeholder="가고 싶은 행사를 검색해 보세요"
+                defaultValue={urlKeyword}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    navigate(`/events?keyword=${encodeURIComponent(e.target.value)}`);
+                  }
+                }}
+                className="flex-1 bg-transparent outline-none text-sm font-bold"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-white px-4 py-3 rounded-full shadow-sm text-sm font-bold text-gray-600">
+              <span>📅</span>
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-transparent outline-none" />
+              <span className="text-gray-200">~</span>
+              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-transparent outline-none" />
+            </div>
+            <select 
+              value={sort} 
+              onChange={(e) => setSort(e.target.value)}
+              className="bg-white px-6 py-3 rounded-full shadow-sm text-sm font-black text-blue-600 outline-none cursor-pointer"
+            >
+              <option value="latest">최신순</option>
+              <option value="likes">인기순</option>
+              <option value="upcoming">진행 예정</option>
+              <option value="ongoing">진행중</option>
+              <option value="ended">종료됨</option>
+            </select>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-white px-4 py-3 rounded-full shadow-sm text-sm font-bold text-gray-600">
-            <span>📅</span>
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-transparent outline-none" />
-            <span className="text-gray-200">~</span>
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-transparent outline-none" />
+        {loading ? (
+          <div className="py-40 text-center text-gray-400 font-bold animate-pulse">로딩 중...</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {displayEvents.map((event) => (
+              <EventCard 
+                key={event.content_id} 
+                event={event} 
+                onClick={() => navigate(`/events/${event.content_id}`)}
+                onLike={handleLike}
+                onBookmark={handleBookmark}
+              />
+            ))}
           </div>
-          <select 
-            value={sort} 
-            onChange={(e) => setSort(e.target.value)}
-            className="bg-white px-6 py-3 rounded-full shadow-sm text-sm font-black text-blue-600 outline-none cursor-pointer"
-          >
-            <option value="latest">최신순</option>
-            <option value="likes">인기순</option>
-            <option value="upcoming">진행 예정</option>
-            <option value="ongoing">진행중</option>
-            <option value="ended">종료됨</option>
-          </select>
-        </div>
-      </div>
+        )}
 
-      {loading ? (
-        <div className="py-40 text-center text-gray-400 font-bold animate-pulse">로딩 중...</div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {displayEvents.map((event) => (
-            <EventCard 
-              key={event.content_id} 
-              event={event} 
-              onClick={() => navigate(`/events/${event.content_id}`)}
-              onLike={handleLike}
-              onBookmark={handleBookmark}
-            />
+        {/* 페이지네이션 */}
+        <div className="mt-24 flex justify-center items-center gap-6">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => { setPage(i + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              className={`text-xl font-black transition-all ${page === i + 1 ? "text-blue-600 scale-125 border-b-4 border-blue-600" : "text-gray-300 hover:text-gray-500"}`}
+            >
+              {i + 1}
+            </button>
           ))}
         </div>
-      )}
-
-      {/* 페이지네이션 */}
-      <div className="mt-24 flex justify-center items-center gap-6">
-        {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            key={i + 1}
-            onClick={() => { setPage(i + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className={`text-xl font-black transition-all ${page === i + 1 ? "text-blue-600 scale-125 border-b-4 border-blue-600" : "text-gray-300 hover:text-gray-500"}`}
-          >
-            {i + 1}
-          </button>
-        ))}
       </div>
-    </div>
+      <BookmarkToast
+        open={bookmarkToastOpen}
+        bookmarked={bookmarkToastState}
+        onClose={() => setBookmarkToastOpen(false)}
+      />
+
+       <LoginRequiredModal
+          open={loginModalOpen}
+          onClose={() => setLoginModalOpen(false)}
+          onLogin={() => {
+            setLoginModalOpen(false);
+            navigate('/login');
+          }}
+        />
+
+    </>
   );
 };
 

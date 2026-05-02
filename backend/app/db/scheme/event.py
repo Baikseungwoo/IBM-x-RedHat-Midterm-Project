@@ -12,6 +12,8 @@ class EventTopItem(BaseModel):
     start_date: date
     end_date: date
     like_count: int
+    is_liked: bool = False
+    is_bookmarked: bool = False
 
 
 class EventListItem(BaseModel):
@@ -24,6 +26,8 @@ class EventListItem(BaseModel):
     status: Optional[str] = None
     like_count: int
     bookmark_count: int
+    is_liked: bool = False
+    is_bookmarked: bool = False
 
 
 class EventSearchItem(BaseModel):
@@ -33,6 +37,8 @@ class EventSearchItem(BaseModel):
     first_image: Optional[str] = None
     start_date: date
     end_date: date
+    is_liked: bool = False
+    is_bookmarked: bool = False
 
 
 class EventAutocompleteItem(BaseModel):
