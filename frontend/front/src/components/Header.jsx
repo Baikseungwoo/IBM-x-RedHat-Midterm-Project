@@ -7,7 +7,7 @@ const Header = () => {
   const [suggestions, setSuggestions] = useState([]); 
   const [isSuggestOpen, setIsSuggestOpen] = useState(false); 
   const [isModalOpen, setIsModalOpen] = useState(false); // 프로필 모달 상태
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // 로그인 상태 (테스트용)
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // 로그인 상태 (테스트용)
   const navigate = useNavigate();
 
 
