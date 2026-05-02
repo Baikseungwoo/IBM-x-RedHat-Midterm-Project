@@ -23,6 +23,8 @@ const EventList = () => {
   // 🔴 헤더 및 리스트 검색어 통합 (URL 파라미터 우선)
   const urlKeyword = searchParams.get("keyword") || "";
   const urlRegion = searchParams.get("region") || "전체"; // URL에서 지역 파라미터 추출
+  const [searchInput, setSearchInput] = useState(urlKeyword);
+
 
   // 🔴 초기 상태를 URL 파라미터(urlRegion) 값으로 설정
   const [region, setRegion] = useState(urlRegion);
@@ -32,6 +34,10 @@ const EventList = () => {
 
   const [page, setPage] = useState(1);
   const pageSize = 20;
+
+  useEffect(() => {
+    setSearchInput(urlKeyword);
+  }, [urlKeyword]);
 
   const requireLogin = () => {
     if (!isLoggedIn) {
@@ -60,54 +66,47 @@ const EventList = () => {
   };
 
   const fetchEvents = async () => {
-    setLoading(true);
-    try {
-      let res;
-      
-      // 🔍 Case 1: 검색어가 있을 때 (백엔드 명세 /api/search 사용)
-      if (urlKeyword) {
-        res = await api.get("/api/search", {
-          params: { keyword: urlKeyword }
-        });
-      } 
-      // 🔍 Case 2: 일반 필터링 (백엔드 명세 /api/events/filter 사용)
-      else {
-        res = await api.get("/api/events/filter", {
-          params: {
-            region: region === "전체" ? undefined : region,
-            status: statusMap[sort] || undefined,
-            start_date_param: startDate || undefined,
-            end_date_param: endDate || undefined,
-          },
-        });
-      }
+  setLoading(true);
 
-      if (res.data) {
-        let fetchedData = res.data.events || res.data || [];
-        
-        // 🔴 정렬 로직 보정: 오늘과 가장 가까운 순서 (오름차순)
-        fetchedData.sort((a, b) => {
-          if (sort === "likes") {
-            if ((b.like_count || 0) !== (a.like_count || 0)) 
-              return (b.like_count || 0) - (a.like_count || 0);
+  try {
+    const res = await api.get("/api/events/filter", {
+      params: {
+        keyword: urlKeyword || undefined,
+        region: region === "전체" ? undefined : region,
+        status: statusMap[sort] || undefined,
+        start_date: startDate || undefined,
+        end_date: endDate || undefined,
+      },
+    });
+
+    if (res.data) {
+      let fetchedData = res.data.events || res.data || [];
+
+      fetchedData.sort((a, b) => {
+        if (sort === "likes") {
+          if ((b.like_count || 0) !== (a.like_count || 0)) {
+            return (b.like_count || 0) - (a.like_count || 0);
           }
-          // 시작일 기준 오름차순 (오늘/가까운 날짜가 상단)
-          const dateA = new Date(a.start_date);
-          const dateB = new Date(b.start_date);
-          if (dateA - dateB !== 0) return dateA - dateB;
-          return b.content_id - a.content_id;
-        });
+        }
 
-        setAllEvents(fetchedData);
-        setPage(1);
-      }
-    } catch (err) {
-      console.error("데이터 로드 실패:", err);
-      setAllEvents([]);
-    } finally {
-      setLoading(false);
+        const dateA = new Date(a.start_date);
+        const dateB = new Date(b.start_date);
+
+        if (dateA - dateB !== 0) return dateA - dateB;
+        return b.content_id - a.content_id;
+      });
+
+      setAllEvents(fetchedData);
+      setPage(1);
     }
-  };
+  } catch (err) {
+    console.error("데이터 로드 실패:", err);
+    setAllEvents([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleLike = async (e, contentId) => {
     e.stopPropagation();
@@ -131,7 +130,6 @@ const EventList = () => {
       console.error("좋아요 실패");
     }
   };
-
 
   const handleBookmark = async (e, contentId) => {
     e.stopPropagation();
@@ -179,6 +177,9 @@ const EventList = () => {
           <h1 className="text-4xl font-black text-gray-900 tracking-tight">
             {urlKeyword ? `"${urlKeyword}" 검색 결과` : "전국 행사 목록"}
           </h1>
+          <p className="mt-3 inline-flex rounded-full bg-blue-50 px-4 py-2 text-sm font-black text-blue-600">
+            검색 지역: {region}
+          </p>
           <p className="text-gray-400 mt-2 font-medium italic">총 {allEvents.length}개의 행사가 검색되었습니다.</p>
         </div>
 
@@ -209,14 +210,25 @@ const EventList = () => {
               <input
                 type="text"
                 placeholder="가고 싶은 행사를 검색해 보세요"
-                defaultValue={urlKeyword}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    navigate(`/events?keyword=${encodeURIComponent(e.target.value)}`);
+                    const params = new URLSearchParams(searchParams);
+                    const keyword = searchInput.trim();
+
+                    if (keyword) {
+                      params.set("keyword", keyword);
+                    } else {
+                      params.delete("keyword");
+                    }
+
+                    navigate(`/events?${params.toString()}`);
                   }
                 }}
                 className="flex-1 bg-transparent outline-none text-sm font-bold"
               />
+
             </div>
           </div>
 
