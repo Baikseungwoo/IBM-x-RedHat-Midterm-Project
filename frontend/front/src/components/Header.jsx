@@ -1,8 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api';
 import LoginRequiredModal from './LoginRequiredModal';
+
+const formatNotificationDate = (dateString) => {
+  if (!dateString) return '';
+
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return date.toLocaleDateString('ko-KR', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -10,9 +24,58 @@ const Header = () => {
   const [isSuggestOpen, setIsSuggestOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
+  const [notificationToastOpen, setNotificationToastOpen] = useState(false);
 
   const navigate = useNavigate();
   const { user, isLoggedIn, logout } = useAuth();
+  const unreadCount = notifications.filter((notification) => !notification.is_read).length;
+
+  const fetchNotifications = useCallback(async () => {
+    if (!isLoggedIn) {
+      setNotifications([]);
+      return;
+    }
+
+    try {
+      const res = await api.get('/api/notifications/me');
+
+      if (res.data?.success) {
+        setNotifications(res.data.notifications || []);
+      }
+    } catch (error) {
+      if (error.response?.status === 401) {
+        setNotifications([]);
+      } else {
+        console.error('알림 조회 실패:', error);
+      }
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    fetchNotifications();
+
+    if (!isLoggedIn) return undefined;
+
+    const timer = setInterval(fetchNotifications, 5000);
+    return () => clearInterval(timer);
+  }, [fetchNotifications, isLoggedIn]);
+
+  useEffect(() => {
+    if (!isLoggedIn || unreadCount === 0 || notificationModalOpen) {
+      setNotificationToastOpen(false);
+      return undefined;
+    }
+
+    setNotificationToastOpen(true);
+
+    const hideTimer = setTimeout(() => {
+      setNotificationToastOpen(false);
+    }, 2500);
+
+    return () => clearTimeout(hideTimer);
+  }, [isLoggedIn, unreadCount, notifications, notificationModalOpen]);
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -74,6 +137,59 @@ const Header = () => {
     setIsModalOpen(false);
     alert('로그아웃 되었습니다.');
     navigate('/');
+  };
+
+  const handleNotificationClick = () => {
+    if (!isLoggedIn) {
+      setLoginModalOpen(true);
+      return;
+    }
+
+    setNotificationModalOpen(true);
+    setNotificationToastOpen(false);
+    fetchNotifications();
+  };
+
+  const markNotificationAsRead = async (notificationId) => {
+    try {
+      await api.patch(`/api/notifications/${notificationId}/read`);
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.notification_id === notificationId
+            ? { ...notification, is_read: true }
+            : notification
+        )
+      );
+    } catch (error) {
+      console.error('알림 읽음 처리 실패:', error);
+    }
+  };
+
+  const handleNotificationItemClick = async (notification) => {
+    if (!notification.is_read) {
+      await markNotificationAsRead(notification.notification_id);
+    }
+
+    setNotificationModalOpen(false);
+    navigate('/history');
+  };
+
+  const handleReadAllNotifications = async () => {
+    const unreadNotifications = notifications.filter((notification) => !notification.is_read);
+
+    try {
+      await Promise.all(
+        unreadNotifications.map((notification) =>
+          api.patch(`/api/notifications/${notification.notification_id}/read`)
+        )
+      );
+
+      setNotifications((prev) =>
+        prev.map((notification) => ({ ...notification, is_read: true }))
+      );
+    } catch (error) {
+      console.error('전체 알림 읽음 처리 실패:', error);
+    }
   };
 
   return (
@@ -208,7 +324,7 @@ const Header = () => {
 
           
 
-          <div className="flex shrink-0 items-center gap-3">
+          <div className="relative flex shrink-0 items-center gap-3">
             {!isLoggedIn && (
               <Link
                 to="/login"
@@ -218,8 +334,15 @@ const Header = () => {
               </Link>
             )}
 
+            {notificationToastOpen && (
+              <div className="absolute right-24 top-14 z-[1001] whitespace-nowrap rounded-2xl border border-sky-100 bg-white px-4 py-2 text-sm font-black text-[#0369A1] shadow-xl shadow-sky-200/40">
+                알림이 있습니다
+              </div>
+            )}
+
             <button
               type="button"
+              onClick={handleNotificationClick}
               className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/55 text-gray-600 shadow-sm transition hover:bg-white hover:text-[#0369A1] active:scale-95"
               aria-label="알림"
             >
@@ -237,7 +360,9 @@ const Header = () => {
                   d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                 />
               </svg>
-              <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-rose-500" />
+              {unreadCount > 0 && (
+                <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-rose-500" />
+              )}
             </button>
 
             <div className="relative">
@@ -324,6 +449,114 @@ const Header = () => {
           navigate('/login');
         }}
       />
+
+      {notificationModalOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setNotificationModalOpen(false)}
+          />
+
+          <div className="relative w-full max-w-md overflow-hidden rounded-[28px] bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-gray-100 bg-sky-50 px-6 py-5">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-sky-500">
+                  Notifications
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-gray-900">
+                  알림 내역
+                </h2>
+                <p className="mt-1 text-sm font-bold text-gray-500">
+                  읽지 않은 알림 {unreadCount}개
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setNotificationModalOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-500 shadow-sm transition hover:text-gray-900 active:scale-95"
+                aria-label="알림 닫기"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="max-h-[420px] overflow-y-auto p-4">
+              {notifications.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-gray-200 px-5 py-12 text-center">
+                  <p className="text-sm font-black text-gray-600">
+                    아직 알림이 없습니다.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notifications.map((notification) => (
+                    <button
+                      key={notification.notification_id}
+                      type="button"
+                      onClick={() => handleNotificationItemClick(notification)}
+                      className={`w-full rounded-2xl border p-4 text-left transition hover:border-sky-200 hover:bg-sky-50 ${
+                        notification.is_read
+                          ? 'border-gray-100 bg-white'
+                          : 'border-sky-100 bg-sky-50/70'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span
+                          className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
+                            notification.is_read ? 'bg-gray-300' : 'bg-rose-500'
+                          }`}
+                        />
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="break-words text-sm font-black text-gray-900">
+                              {notification.title}
+                            </p>
+                            <span className="shrink-0 text-[11px] font-bold text-gray-400">
+                              {formatNotificationDate(notification.created_at)}
+                            </span>
+                          </div>
+
+                          <p className="mt-2 break-words text-sm font-semibold leading-6 text-gray-500">
+                            {notification.message}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {notifications.length > 0 && (
+              <div className="flex justify-between gap-3 border-t border-gray-100 px-5 py-4">
+                <button
+                  type="button"
+                  onClick={handleReadAllNotifications}
+                  disabled={unreadCount === 0}
+                  className="rounded-2xl border border-gray-200 px-4 py-2 text-sm font-bold text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300"
+                >
+                  모두 읽음
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotificationModalOpen(false);
+                    navigate('/history');
+                  }}
+                  className="rounded-2xl bg-[#0369A1] px-4 py-2 text-sm font-black text-white shadow-lg shadow-sky-200/50 transition hover:bg-sky-500 active:scale-95"
+                >
+                  문의내역 보기
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 };

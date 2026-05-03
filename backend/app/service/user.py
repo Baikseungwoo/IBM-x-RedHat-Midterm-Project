@@ -53,6 +53,7 @@ def _user_payload(user) -> dict:
         "nickname": user.nickname,
         "image_data": _encode_image_data(user.image_data),
         "created_at": user.created_at,
+        "is_admin": user.is_admin,
     }
 
 

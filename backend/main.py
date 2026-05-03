@@ -18,6 +18,10 @@ from app.router.event import router as event_router
 from app.router.event_interaction import router as event_interaction_router
 from app.router.review import router as review_router
 from app.router.course import router as course_router
+from app.router.inquiry import router as inquiry_router
+from app.router.admin import router as admin_router
+from app.router.notification import router as notification_router
+
 
 
 from app.service.event_ingest import sync_recent_and_upcoming_events_service
@@ -82,6 +86,10 @@ app.include_router(event_router)
 app.include_router(event_interaction_router)
 app.include_router(review_router)
 app.include_router(course_router)
+app.include_router(inquiry_router)
+app.include_router(admin_router)
+app.include_router(notification_router)
+
 
 
 if __name__ == "__main__":

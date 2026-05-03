@@ -10,6 +10,9 @@ import MyPage from './pages/MyPage/MyPage';
 import EventList from './pages/EventList/EventList';
 import EventDetail from './pages/EventDetail/EventDetail';
 import RecommendPage from './pages/RecommedPage/RecommedPage'; 
+import SupportPage from './pages/Support/SupportPage';
+import InquiryHistoryPage from './pages/InquiryHistory/InquiryHistoryPage';
+import AdminInquiryPage from './pages/AdminInquiry/AdminInquiryPage';
 import './App.css';
 import AboutPage from './pages/AboutPage';
 import PrivacyPage from './pages/PrivacyPage';
@@ -37,6 +40,9 @@ function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
+            <Route path="/support" element={<SupportPage />} />
+            <Route path="/history" element={<InquiryHistoryPage />} />
+            <Route path="/admin/inquiries" element={<AdminInquiryPage />} />
           </Route>
         </Routes>
       </Router>
