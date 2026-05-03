@@ -15,6 +15,7 @@ class UserInfoResponse(BaseModel):
     nickname: str
     image_data: str | None = None
     created_at: datetime
+    is_admin: bool
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -61,6 +62,7 @@ class MeResponseUser(BaseModel):
     nickname: str
     image_data: str | None = None
     created_at: datetime
+    is_admin: bool
 
 class MeResponse(BaseModel):
     success: bool

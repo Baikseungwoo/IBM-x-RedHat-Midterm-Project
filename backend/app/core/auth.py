@@ -1,9 +1,12 @@
-from fastapi import Request, Response, HTTPException, Security
+from fastapi import Request, Response, HTTPException, Security, Depends
 from jwt import ExpiredSignatureError, InvalidTokenError
 from app.core.settings import settings
 from app.core.jwt_handle import verify_token
 from typing import Optional
 from fastapi.security import APIKeyCookie
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.database import get_db
+from app.db.crud.user import get_user_by_id
 
 access_cookie_scheme = APIKeyCookie(name="access_token", auto_error=False)
 
@@ -58,3 +61,15 @@ async def get_optional(request:Request) -> Optional[int]:
         return verify_token(access_token)
     except(ExpiredSignatureError,InvalidTokenError ):
         return None
+    
+
+async def get_admin_user_id(
+    user_id: int = Depends(get_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> int:
+    user = await get_user_by_id(db, user_id)
+
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    return user_id

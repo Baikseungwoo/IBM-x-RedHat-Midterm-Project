@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, func
+from sqlalchemy import Column, Integer, String, DateTime, func, Boolean
 from sqlalchemy.dialects.mysql import LONGBLOB
 from sqlalchemy.orm import relationship
 from app.db.database import Base
@@ -13,9 +13,13 @@ class User(Base):
     refresh_token = Column(String(255), nullable=False, default="")
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     image_data = Column(LONGBLOB, nullable=True)
+    is_admin = Column(Boolean, nullable=False, default=False)
+
 
 
     reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
     likes = relationship("Like", back_populates="user", cascade="all, delete-orphan")
     bookmarks = relationship("Bookmark", back_populates="user", cascade="all, delete-orphan")
     courses = relationship("Course", back_populates="user", cascade="all, delete-orphan")  # 추가)
+    inquiries = relationship("Inquiry", back_populates="user", cascade="all, delete-orphan")
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")

@@ -1,3 +1,4 @@
+import base64
 from typing import Optional
 
 from sqlalchemy import select
@@ -8,9 +9,15 @@ from app.db.models.review import Review
 from app.db.models.user import User
 
 
+def _encode_image_data(image_data: bytes | None) -> str | None:
+    if not image_data:
+        return None
+    return base64.b64encode(image_data).decode("utf-8")
+
+
 async def list_reviews_by_content_id(db: AsyncSession, content_id: int) -> list[dict]:
     stmt = (
-        select(Review, User.nickname)
+        select(Review, User.nickname, User.image_data)
         .join(User, User.user_id == Review.user_id)
         .where(Review.content_id == content_id)
         .order_by(Review.created_at.desc())
@@ -18,17 +25,17 @@ async def list_reviews_by_content_id(db: AsyncSession, content_id: int) -> list[
     rows = (await db.execute(stmt)).all()
 
     reviews: list[dict] = []
-    for review, nickname in rows:
+    for review, nickname, image_data in rows:
         reviews.append(
             {
                 "review_id": review.review_id,
                 "user_id": review.user_id,
                 "content_id": review.content_id,
                 "content": review.content,
-                "rating": review.rating,
                 "created_at": review.created_at,
                 "updated_at": review.updated_at,
                 "nickname": nickname,
+                "image_data": _encode_image_data(image_data),
             }
         )
     return reviews
@@ -39,7 +46,6 @@ async def create_review(
     user_id: int,
     content_id: int,
     content: str,
-    rating: int,
 ) -> Review | None:
     event = await db.get(Event, content_id)
     if not event:
@@ -49,7 +55,6 @@ async def create_review(
         user_id=user_id,
         content_id=content_id,
         content=content,
-        rating=rating,
     )
     db.add(review)
     await db.commit()
@@ -62,7 +67,6 @@ async def update_review(
     review_id: int,
     user_id: int,
     content: Optional[str],
-    rating: Optional[int],
 ) -> Review | None:
     stmt = select(Review).where(Review.review_id == review_id, Review.user_id == user_id)
     review = (await db.execute(stmt)).scalar_one_or_none()
@@ -71,8 +75,7 @@ async def update_review(
 
     if content is not None:
         review.content = content
-    if rating is not None:
-        review.rating = rating
+
 
     await db.commit()
     await db.refresh(review)
