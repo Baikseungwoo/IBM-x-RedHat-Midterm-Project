@@ -67,12 +67,25 @@ class MyCourseItem(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class MySavedCourseResponse(BaseModel):
+    course_id: int
+    user_id: int
+    course_title: str
+    region: str
+    date: date
+    keyword: str
+    description: str
+    created_at: datetime
+    course: list[CourseRecommendEventItem]
+
+
 
 class MyCoursesResponse(BaseModel):
     success: bool
-    courses: list[MyCourseItem]
+    courses: list[MySavedCourseResponse]
 
 
 class DeleteCourseResponse(BaseModel):
     success: bool
     course_id: int
+

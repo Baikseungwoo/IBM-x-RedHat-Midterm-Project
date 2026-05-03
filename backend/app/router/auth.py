@@ -42,3 +42,10 @@ async def login(payload: LoginRequest, response: Response, db: AsyncSession = De
 @router.post("/find-email", response_model=FindEmailResponse)
 async def find_email(payload: FindEmailRequest, db: AsyncSession = Depends(get_db)):
     return await find_email_service(db, payload)
+
+@router.post("/logout")
+async def logout(response: Response):
+    response.delete_cookie("access_token")
+    response.delete_cookie("refresh_token")
+    return {"success": True}
+

@@ -2,18 +2,51 @@ from datetime import date
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, or_, select, case
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.event import Event
 from app.db.models.event_detail import EventDetail
+from app.db.models.like import Like
+from app.db.models.bookmark import Bookmark
+
+
+async def _interaction_sets(db: AsyncSession, user_id: Optional[int], content_ids: list[int]):
+    if not user_id or not content_ids:
+        return set(), set()
+
+    like_rows = await db.execute(
+        select(Like.content_id).where(
+            Like.user_id == user_id,
+            Like.content_id.in_(content_ids),
+        )
+    )
+
+    bookmark_rows = await db.execute(
+        select(Bookmark.content_id).where(
+            Bookmark.user_id == user_id,
+            Bookmark.content_id.in_(content_ids),
+        )
+    )
+
+    liked_ids = {row[0] for row in like_rows.all()}
+    bookmarked_ids = {row[0] for row in bookmark_rows.all()}
+
+    return liked_ids, bookmarked_ids
 
 
 def _ongoing_condition(today: date):
     return and_(Event.start_date <= today, Event.end_date >= today)
 
 
-def _top_item(e: Event) -> dict:
+def _top_item(
+    e: Event,
+    liked_ids: set[int] | None = None,
+    bookmarked_ids: set[int] | None = None,
+) -> dict:
+    liked_ids = liked_ids or set()
+    bookmarked_ids = bookmarked_ids or set()
+
     return {
         "content_id": e.content_id,
         "title": e.title,
@@ -22,10 +55,19 @@ def _top_item(e: Event) -> dict:
         "start_date": e.start_date,
         "end_date": e.end_date,
         "like_count": e.like_count or 0,
+        "is_liked": e.content_id in liked_ids,
+        "is_bookmarked": e.content_id in bookmarked_ids,
     }
 
 
-def _list_item(e: Event) -> dict:
+def _list_item(
+    e: Event,
+    liked_ids: set[int] | None = None,
+    bookmarked_ids: set[int] | None = None,
+) -> dict:
+    liked_ids = liked_ids or set()
+    bookmarked_ids = bookmarked_ids or set()
+
     return {
         "content_id": e.content_id,
         "title": e.title,
@@ -36,10 +78,19 @@ def _list_item(e: Event) -> dict:
         "status": e.status,
         "like_count": e.like_count or 0,
         "bookmark_count": e.bookmark_count or 0,
+        "is_liked": e.content_id in liked_ids,
+        "is_bookmarked": e.content_id in bookmarked_ids,
     }
 
 
-def _search_item(e: Event) -> dict:
+def _search_item(
+    e: Event,
+    liked_ids: set[int] | None = None,
+    bookmarked_ids: set[int] | None = None,
+) -> dict:
+    liked_ids = liked_ids or set()
+    bookmarked_ids = bookmarked_ids or set()
+
     return {
         "content_id": e.content_id,
         "title": e.title,
@@ -47,31 +98,54 @@ def _search_item(e: Event) -> dict:
         "first_image": e.first_image,
         "start_date": e.start_date,
         "end_date": e.end_date,
+        "is_liked": e.content_id in liked_ids,
+        "is_bookmarked": e.content_id in bookmarked_ids,
     }
 
-
-async def get_region_top_events(db: AsyncSession, region: str) -> dict:
-    today = date.today()
+async def get_region_top_events(
+    db: AsyncSession,
+    region: str,
+    user_id: Optional[int] = None,
+) -> dict:
     stmt = (
         select(Event)
-        .where(and_(Event.region == region, _ongoing_condition(today)))
+        .where(and_(Event.region == region, Event.end_date >= date.today()))
         .order_by(Event.like_count.desc(), Event.start_date.asc())
         .limit(3)
     )
+
     rows = (await db.execute(stmt)).scalars().all()
-    return {"success": True, "events": [_top_item(e) for e in rows]}
 
+    content_ids = [e.content_id for e in rows]
+    liked_ids, bookmarked_ids = await _interaction_sets(db, user_id, content_ids)
 
-async def get_top_events(db: AsyncSession) -> dict:
+    return {
+        "success": True,
+        "events": [_top_item(e, liked_ids, bookmarked_ids) for e in rows],
+    }
+
+async def get_top_events(
+    db: AsyncSession,
+    user_id: Optional[int] = None,
+) -> dict:
     today = date.today()
+
     stmt = (
         select(Event)
         .where(_ongoing_condition(today))
         .order_by(Event.like_count.desc(), Event.start_date.asc())
         .limit(10)
     )
+
     rows = (await db.execute(stmt)).scalars().all()
-    return {"success": True, "events": [_top_item(e) for e in rows]}
+
+    content_ids = [e.content_id for e in rows]
+    liked_ids, bookmarked_ids = await _interaction_sets(db, user_id, content_ids)
+
+    return {
+        "success": True,
+        "events": [_top_item(e, liked_ids, bookmarked_ids) for e in rows],
+    }
 
 
 async def get_event_detail(db: AsyncSession, content_id: int) -> dict:
@@ -112,7 +186,11 @@ async def get_event_detail(db: AsyncSession, content_id: int) -> dict:
     return {"success": True, "event": data}
 
 
-async def search_events(db: AsyncSession, keyword: str) -> dict:
+async def search_events(
+    db: AsyncSession,
+    keyword: str,
+    user_id: Optional[int] = None,
+) -> dict:
     kw = keyword.strip()
     if not kw:
         return {"success": True, "events": []}
@@ -123,14 +201,32 @@ async def search_events(db: AsyncSession, keyword: str) -> dict:
         .order_by(Event.like_count.desc(), Event.start_date.asc())
         .limit(50)
     )
+
     rows = (await db.execute(stmt)).scalars().all()
-    return {"success": True, "events": [_search_item(e) for e in rows]}
+
+    content_ids = [e.content_id for e in rows]
+    liked_ids, bookmarked_ids = await _interaction_sets(db, user_id, content_ids)
+
+    return {
+        "success": True,
+        "events": [_search_item(e, liked_ids, bookmarked_ids) for e in rows],
+    }
 
 
-async def list_events(db: AsyncSession) -> dict:
+async def list_events(
+    db: AsyncSession,
+    user_id: Optional[int] = None,
+) -> dict:
     stmt = select(Event).order_by(Event.start_date.desc(), Event.content_id.desc())
     rows = (await db.execute(stmt)).scalars().all()
-    return {"success": True, "events": [_list_item(e) for e in rows]}
+
+    content_ids = [e.content_id for e in rows]
+    liked_ids, bookmarked_ids = await _interaction_sets(db, user_id, content_ids)
+
+    return {
+        "success": True,
+        "events": [_list_item(e, liked_ids, bookmarked_ids) for e in rows],
+    }
 
 
 async def filter_events(
@@ -141,6 +237,7 @@ async def filter_events(
     start_date_param: Optional[date] = None,
     end_date_param: Optional[date] = None,
     keyword: Optional[str] = None,
+    user_id: Optional[int] = None,
 ) -> dict:
     stmt = select(Event)
 
@@ -174,8 +271,14 @@ async def filter_events(
 
     stmt = stmt.order_by(Event.start_date.desc(), Event.content_id.desc())
     rows = (await db.execute(stmt)).scalars().all()
-    return {"success": True, "events": [_list_item(e) for e in rows]}
 
+    content_ids = [e.content_id for e in rows]
+    liked_ids, bookmarked_ids = await _interaction_sets(db, user_id, content_ids)
+
+    return {
+        "success": True,
+        "events": [_list_item(e, liked_ids, bookmarked_ids) for e in rows],
+    }
 
 async def list_categories(db: AsyncSession) -> dict:
     stmt = (
@@ -194,12 +297,37 @@ async def autocomplete_events(db: AsyncSession, keyword: str) -> dict:
     if not kw:
         return {"success": True, "events": []}
 
+    starts_with_keyword = case(
+        (Event.title.ilike(f"{kw}%"), 0),
+        else_=1,
+    )
+
     stmt = (
-        select(Event.content_id, Event.title)
+        select(
+            Event.content_id,
+            Event.title,
+            Event.region,
+            Event.first_image,
+        )
         .where(Event.title.ilike(f"%{kw}%"))
-        .order_by(Event.like_count.desc(), Event.title.asc())
+        .order_by(
+            starts_with_keyword.asc(),
+            Event.like_count.desc(),
+            Event.title.asc(),
+        )
         .limit(10)
     )
+
     rows = (await db.execute(stmt)).all()
-    events = [{"content_id": r[0], "title": r[1]} for r in rows]
+
+    events = [
+        {
+            "content_id": r[0],
+            "title": r[1],
+            "region": r[2],
+            "thumbnail": r[3],
+        }
+        for r in rows
+    ]
+
     return {"success": True, "events": events}
