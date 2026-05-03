@@ -46,9 +46,7 @@ const BookmarkSection = ({ bookmarks, setBookmarks }) => {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex justify-between items-center px-4">
-          <h2 className="text-xl font-black text-gray-900">북마크 목록</h2>
-        </div>
+        
 
         {bookmarks.length > 0 ? (
           <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">

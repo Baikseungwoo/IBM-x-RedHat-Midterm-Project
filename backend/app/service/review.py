@@ -1,6 +1,9 @@
+import base64
+
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.models.user import User
 from app.db.crud.review import (
     create_review,
     delete_review,
@@ -10,7 +13,13 @@ from app.db.crud.review import (
 from app.db.scheme.review import ReviewCreate, ReviewUpdate
 
 
-def _review_to_dict(review) -> dict:
+def _encode_image_data(image_data: bytes | None) -> str | None:
+    if not image_data:
+        return None
+    return base64.b64encode(image_data).decode("utf-8")
+
+
+def _review_to_dict(review, user: User | None = None) -> dict:
     return {
         "review_id": review.review_id,
         "user_id": review.user_id,
@@ -18,6 +27,8 @@ def _review_to_dict(review) -> dict:
         "content": review.content,
         "created_at": review.created_at,
         "updated_at": review.updated_at,
+        "nickname": user.nickname if user else None,
+        "image_data": _encode_image_data(user.image_data) if user else None,
     }
 
 
@@ -41,7 +52,8 @@ async def create_review_service(
     if review is None:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    return {"success": True, "review": _review_to_dict(review)}
+    user = await db.get(User, user_id)
+    return {"success": True, "review": _review_to_dict(review, user)}
 
 
 async def update_review_service(

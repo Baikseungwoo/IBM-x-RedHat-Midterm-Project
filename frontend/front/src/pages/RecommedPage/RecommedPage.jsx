@@ -1,31 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../api'; 
-import Modal from '../../components/modal'; 
+import api from '../../api';
+import Modal from '../../components/modal';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import LoginRequiredModal from '../../components/LoginRequiredModal';
-
+import RecommendErrorModal from '../../components/RecommendErrorModal';
+import CourseSaveSuccessModal from '../../components/CourseSaveSuccessModal';
 
 const RecommendPage = () => {
   const regionData = [
-    { id: "서울", name: "서울" }, { id: "경기도", name: "경기도" },
-    { id: "강원도", name: "강원도" }, { id: "충청북도", name: "충청북도" },
-    { id: "충청남도", name: "충청남도" }, { id: "전라북도", name: "전라북도" },
-    { id: "전라남도", name: "전라남도" }, { id: "경상북도", name: "경상북도" },
-    { id: "경상남도", name: "경상남도" }, { id: "제주도", name: "제주도" }
+    { id: "서울", name: "서울" },
+    { id: "경기도", name: "경기도" },
+    { id: "강원도", name: "강원도" },
+    { id: "충청북도", name: "충청북도" },
+    { id: "충청남도", name: "충청남도" },
+    { id: "전라북도", name: "전라북도" },
+    { id: "전라남도", name: "전라남도" },
+    { id: "경상북도", name: "경상북도" },
+    { id: "경상남도", name: "경상남도" },
+    { id: "제주도", name: "제주도" },
   ];
+
+  const [saveSuccessOpen, setSaveSuccessOpen] = useState(false);
 
   const navigate = useNavigate();
   const { isLoggedIn } = useAuth();
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [keyword, setKeyword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false); 
+  const [isSaving, setIsSaving] = useState(false);
   const [recommendResult, setRecommendResult] = useState(null);
 
+  const [errorModal, setErrorModal] = useState({
+    open: false,
+    message: '',
+  });
 
   const requireLogin = () => {
     if (!isLoggedIn) {
@@ -36,7 +48,6 @@ const RecommendPage = () => {
     return true;
   };
 
-  // --- [추가] 로드 시 로컬스토리지에서 데이터 불러오기 ---
   useEffect(() => {
     const savedCourse = localStorage.getItem('last_recommend_result');
     const savedInputs = localStorage.getItem('last_recommend_inputs');
@@ -44,6 +55,7 @@ const RecommendPage = () => {
     if (savedCourse) {
       setRecommendResult(JSON.parse(savedCourse));
     }
+
     if (savedInputs) {
       const { region, date, keyword } = JSON.parse(savedInputs);
       setSelectedRegion(region || '');
@@ -52,53 +64,67 @@ const RecommendPage = () => {
     }
   }, []);
 
-  // --- [API 1] AI 추천 코스 요청 ---
   const getAIRecommendation = async () => {
     if (!requireLogin()) return;
 
     if (!selectedRegion || !selectedDate || !keyword) {
-      alert("지역, 날짜, 키워드를 모두 입력해주세요!");
+      setErrorModal({
+        open: true,
+        message: "지역, 날짜, 키워드를 모두 입력해주세요.",
+      });
       return;
     }
 
     setIsLoading(true);
-    setRecommendResult(null); 
+    setRecommendResult(null);
 
     try {
       const response = await api.post('/api/courses/recommend', {
         region: selectedRegion,
         date: selectedDate,
-        keyword: keyword
+        keyword,
       });
 
       if (response.data.success) {
         setRecommendResult(response.data);
-        
-        // --- [추가] 성공 시 로컬스토리지에 저장 ---
+
         localStorage.setItem('last_recommend_result', JSON.stringify(response.data));
         localStorage.setItem('last_recommend_inputs', JSON.stringify({
           region: selectedRegion,
           date: selectedDate,
-          keyword: keyword
+          keyword,
         }));
       } else {
-        alert("추천 결과를 가져오지 못했습니다.");
+        setErrorModal({
+          open: true,
+          message: "추천 결과를 가져오지 못했습니다.",
+        });
       }
     } catch (error) {
       console.error("AI 추천 API 에러:", error);
-      alert("서버 통신 중 오류가 발생했습니다.");
+
+      const detail = error.response?.data?.detail;
+
+      const message =
+        detail === "Not enough events to recommend (need at least 3)."
+          ? "선택한 지역과 날짜에 추천할 행사가 3개 미만입니다. 다른 지역, 날짜, 키워드로 다시 시도해주세요."
+          : detail || "서버 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+
+      setErrorModal({
+        open: true,
+        message,
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // --- [API 2] AI 추천 코스 저장 (저장 성공 후에는 스토리지 비우기 선택 사항) ---
   const handleSaveCourse = async () => {
     if (!requireLogin()) return;
-
     if (!recommendResult) return;
 
     setIsSaving(true);
+
     try {
       const saveData = {
         region: recommendResult.region,
@@ -108,20 +134,24 @@ const RecommendPage = () => {
         keyword: recommendResult.keyword,
         course: recommendResult.course.map((item, index) => ({
           content_id: item.content_id,
-          sequence: index + 1
-        }))
+          sequence: index + 1,
+        })),
       };
 
       const response = await api.post('/api/courses', saveData);
-      
+
       if (response.data.success) {
-        alert("나의 코스에 성공적으로 저장되었습니다! 마이페이지에서 확인하세요.");
-        // 저장 완료 후 스토리지를 비우고 싶다면 아래 주석 해제
-        // localStorage.removeItem('last_recommend_result');
+        localStorage.removeItem('last_recommend_result');
+        localStorage.removeItem('last_recommend_inputs');
+        setRecommendResult(null);
+        setSaveSuccessOpen(true);
       }
     } catch (error) {
       console.error("코스 저장 API 에러:", error);
-      alert("로그인 세션이 만료되었거나 저장 중 오류가 발생했습니다.");
+      setErrorModal({
+        open: true,
+        message: "로그인 세션이 만료되었거나 저장 중 오류가 발생했습니다.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -129,87 +159,173 @@ const RecommendPage = () => {
 
   return (
     <>
-      <div className="w-full min-h-screen bg-white py-16 px-10">
-        <div className="max-w-[1200px] mx-auto flex flex-col items-center">
-          
-          {/* 헤더 */}
-          <div className="text-center mb-12">
-            <h1 className="text-[32px] font-black text-gray-900 mb-3 tracking-tight">AI 맞춤 행사 루틴 추천</h1>
-            <p className="text-gray-500 font-medium">당신의 취향을 분석하여 최적의 동선을 설계합니다.</p>
+      <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,#FFF8D7_0%,#E0F7FF_42%,#C9EEFF_72%,#B8E3FF_100%)] px-5 py-14 md:px-10">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute left-[7%] top-16 h-56 w-56 rounded-full bg-yellow-200/45 blur-3xl" />
+          <div className="absolute right-[10%] top-36 h-72 w-72 rounded-full bg-pink-200/35 blur-3xl" />
+          <div className="absolute bottom-20 left-[35%] h-72 w-72 rounded-full bg-emerald-200/25 blur-3xl" />
+        </div>
+
+        <div className="relative z-10 mx-auto flex max-w-[1200px] flex-col items-center">
+          <div className="mb-10 text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/70 px-4 py-2 text-sm font-black text-sky-700 shadow-sm backdrop-blur">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              AI Festival Route Planner
+            </div>
+
+            <h1 className="text-[34px] font-black tracking-tight text-gray-900 md:text-[44px]">
+              AI 맞춤 행사 루틴 추천
+            </h1>
+
+            <p className="mt-4 text-base font-semibold leading-7 text-gray-500 md:text-lg">
+              지역, 날짜, 취향을 입력하면 어울리는 행사 코스를 찾아드려요.
+            </p>
           </div>
 
-          {/* 입력 섹션 */}
-          <div className="w-full bg-gray-50 p-10 rounded-[50px] shadow-sm mb-12 border border-gray-100 flex flex-col xl:flex-row gap-6 items-stretch justify-center">
-            <div className="flex-1">
-              <p className="text-[10px] font-black text-blue-500 mb-4 uppercase tracking-[0.2em] ml-2">01. Region</p>
-              <select 
-                value={selectedRegion}
-                onChange={(e) => setSelectedRegion(e.target.value)}
-                className="w-full p-5 rounded-3xl border-2 border-white focus:border-blue-400 focus:bg-white outline-none text-gray-700 font-bold shadow-sm appearance-none bg-white"
-              >
-                <option value="">지역 선택</option>
-                {regionData.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-              </select>
+          <div className="mb-10 grid w-full gap-5 md:grid-cols-3">
+            <div className="rounded-[28px] border border-white/70 bg-white/60 p-5 shadow-lg shadow-sky-100/40 backdrop-blur-2xl">
+              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-sky-500">
+                Step 01
+              </p>
+              <p className="mt-2 text-lg font-black text-gray-900">지역 선택</p>
+              <p className="mt-2 text-sm font-semibold leading-6 text-gray-500">
+                여행하고 싶은 지역을 먼저 골라주세요.
+              </p>
             </div>
 
-            <div className="flex-1 border-x-0 xl:border-x border-gray-200 xl:px-6">
-              <p className="text-[10px] font-black text-blue-500 mb-4 uppercase tracking-[0.2em] ml-2">02. Date</p>
-              <input 
-                type="date" 
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full p-5 rounded-3xl border-2 border-white focus:border-blue-400 focus:bg-white outline-none text-gray-700 font-bold shadow-sm bg-white"
-              />
+            <div className="rounded-[28px] border border-white/70 bg-white/60 p-5 shadow-lg shadow-sky-100/40 backdrop-blur-2xl">
+              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-pink-400">
+                Step 02
+              </p>
+              <p className="mt-2 text-lg font-black text-gray-900">날짜 입력</p>
+              <p className="mt-2 text-sm font-semibold leading-6 text-gray-500">
+                해당 날짜에 진행되는 행사를 기준으로 추천해요.
+              </p>
             </div>
 
-            <div className="flex-1">
-              <p className="text-[10px] font-black text-blue-500 mb-4 uppercase tracking-[0.2em] ml-2">03. Keyword</p>
-              <input 
-                type="text"
-                placeholder="ex) 힐링, 익사이팅, 맛집 투어"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                className="w-full p-5 rounded-3xl border-2 border-white focus:border-blue-400 focus:bg-white outline-none text-gray-700 font-bold shadow-sm bg-white"
-              />
+            <div className="rounded-[28px] border border-white/70 bg-white/60 p-5 shadow-lg shadow-sky-100/40 backdrop-blur-2xl">
+              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-emerald-500">
+                Step 03
+              </p>
+              <p className="mt-2 text-lg font-black text-gray-900">취향 키워드</p>
+              <p className="mt-2 text-sm font-semibold leading-6 text-gray-500">
+                힐링, 전시, 맛집, 가족 여행처럼 원하는 분위기를 적어주세요.
+              </p>
             </div>
           </div>
 
-          {/* 버튼 그룹 */}
-          <div className="flex items-center gap-6 mb-20">
-            <button 
-              onClick={getAIRecommendation}
-              disabled={isLoading}
-              className={`px-20 py-5 rounded-full font-black tracking-tighter transition-all shadow-2xl text-xl
-                ${isLoading ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#0369A1] text-white hover:bg-black hover:scale-105 active:scale-95'}`}
-            >
-              {isLoading ? "AI 분석 중..." : "AI 추천 받기"}
-            </button>
+          <div className="relative mb-10 w-full overflow-hidden rounded-[42px] border border-white/70 bg-white/65 p-6 shadow-2xl shadow-sky-200/40 backdrop-blur-2xl md:p-8 xl:p-10">
+            <div className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full bg-yellow-200/45 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-cyan-200/40 blur-3xl" />
 
-            {recommendResult && (
-              <button 
-                onClick={handleSaveCourse}
-                disabled={isSaving}
-                className={`px-12 py-5 rounded-full font-black tracking-tighter transition-all shadow-2xl text-xl border-4 border-gray-900
-                  ${isSaving ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-900 hover:bg-gray-900 hover:text-white active:scale-95'}`}
+            <div className="relative grid gap-5 xl:grid-cols-3">
+              <div>
+                <p className="mb-3 ml-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-500">
+                  01. Region
+                </p>
+
+                <select
+                  value={selectedRegion}
+                  onChange={(e) => setSelectedRegion(e.target.value)}
+                  className="h-14 w-full rounded-2xl border border-sky-100 bg-white/85 px-5 text-sm font-black text-gray-700 shadow-sm outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                >
+                  <option value="">지역 선택</option>
+                  {regionData.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <p className="mb-3 ml-2 text-[10px] font-black uppercase tracking-[0.2em] text-pink-400">
+                  02. Date
+                </p>
+
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="h-14 w-full rounded-2xl border border-sky-100 bg-white/85 px-5 text-sm font-black text-gray-700 shadow-sm outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                />
+              </div>
+
+              <div>
+                <p className="mb-3 ml-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">
+                  03. Keyword
+                </p>
+
+                <input
+                  type="text"
+                  placeholder="ex) 힐링, 익사이팅, 맛집 투어"
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  className="h-14 w-full rounded-2xl border border-sky-100 bg-white/85 px-5 text-sm font-black text-gray-700 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                />
+              </div>
+            </div>
+
+            <div className="relative mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <button
+                type="button"
+                onClick={getAIRecommendation}
+                disabled={isLoading}
+                className={`min-w-[220px] rounded-full px-10 py-4 text-lg font-black tracking-tight shadow-2xl transition-all active:scale-95 ${
+                  isLoading
+                    ? 'cursor-not-allowed bg-gray-200 text-gray-400 shadow-none'
+                    : 'bg-[#0369A1] text-white shadow-sky-300/40 hover:-translate-y-1 hover:bg-gray-900'
+                }`}
               >
-                {isSaving ? "저장 중..." : "코스 저장하기"}
+                {isLoading ? "AI 분석 중..." : "AI 추천 받기"}
               </button>
-            )}
+
+              {recommendResult && (
+                <button
+                  type="button"
+                  onClick={handleSaveCourse}
+                  disabled={isSaving}
+                  className={`min-w-[180px] rounded-full border border-gray-900 px-8 py-4 text-lg font-black tracking-tight shadow-xl transition-all active:scale-95 ${
+                    isSaving
+                      ? 'bg-gray-100 text-gray-400'
+                      : 'bg-white/90 text-gray-900 hover:-translate-y-1 hover:bg-gray-900 hover:text-white'
+                  }`}
+                >
+                  {isSaving ? "저장 중..." : "코스 저장하기"}
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* 결과창 (Modal 컴포넌트) */}
-          <Modal courseData={recommendResult} />
-
+          <div className="w-full">
+            <Modal courseData={recommendResult} />
+          </div>
         </div>
       </div>
+
       <LoginRequiredModal
-      open={loginModalOpen}
-      onClose={() => setLoginModalOpen(false)}
-      onLogin={() => {
-        setLoginModalOpen(false);
-        navigate('/login');
-      }}
-    />
+        open={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+        onLogin={() => {
+          setLoginModalOpen(false);
+          navigate('/login');
+        }}
+      />
+
+      <RecommendErrorModal
+        open={errorModal.open}
+        message={errorModal.message}
+        onClose={() => setErrorModal({ open: false, message: '' })}
+      />
+
+      <CourseSaveSuccessModal
+        open={saveSuccessOpen}
+        onClose={() => setSaveSuccessOpen(false)}
+        onGoMyPage={() => {
+          setSaveSuccessOpen(false);
+          navigate('/mypage');
+        }}
+      />
     </>
   );
 };

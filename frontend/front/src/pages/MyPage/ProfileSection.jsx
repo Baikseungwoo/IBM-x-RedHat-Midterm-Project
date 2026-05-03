@@ -121,8 +121,21 @@ const ProfileSection = ({ user, setUser }) => {
     };
 
     return (
-        <div className="flex flex-row items-center gap-16 bg-white p-12 rounded-[40px] shadow-sm border border-gray-50">
+        
+          <div className="bg-white/85 p-8 rounded-[34px] shadow-sm border border-white/70">
+            <div className="mb-7">
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-emerald-500">
+                My Profile
+            </p>
+            <h2 className="mt-1 text-2xl font-black text-gray-900">
+                내 프로필
+            </h2>
+            </div>
+
+    <div className="flex flex-row items-center gap-16">
+            
             <div className="relative flex-shrink-0">
+                
                 <div className="w-48 h-48 rounded-full overflow-hidden shadow-md bg-gray-100 border-4 border-white ring-1 ring-gray-100 flex items-center justify-center">
                     {user.image_data ? (
                         <img
@@ -196,6 +209,7 @@ const ProfileSection = ({ user, setUser }) => {
                     {emailMsg && <p className={`mt-4 text-sm font-bold ${emailMode === 'save' ? 'text-blue-600' : 'text-red-500'}`}>{emailMsg}</p>}
                 </div>
             </div>
+        </div>
         </div>
     );
 };

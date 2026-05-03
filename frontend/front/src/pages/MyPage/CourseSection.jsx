@@ -52,9 +52,7 @@ const CourseSection = ({ courses, setCourses }) => {
 
   return (
     <div className="space-y-6 w-full">
-      <div className="flex justify-between items-center px-4">
-        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">AI 추천 코스 목록</h2>
-      </div>
+      
 
       <div className="flex flex-col gap-6">
         {safeCourses.length > 0 ? (
