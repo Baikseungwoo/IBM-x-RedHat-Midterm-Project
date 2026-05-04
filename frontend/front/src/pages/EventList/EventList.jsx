@@ -369,7 +369,7 @@ const EventList = () => {
                   onChange={(e) => setSort(e.target.value)}
                   className="h-12 rounded-2xl border border-sky-100 bg-white/85 px-5 text-sm font-black text-[#0369A1] shadow-sm outline-none cursor-pointer"
                 >
-                  <option value="latest">최신순</option>
+                  <option value="latest">기본순</option>
                   <option value="likes">인기순</option>
                   <option value="upcoming">진행 예정</option>
                   <option value="ongoing">진행중</option>

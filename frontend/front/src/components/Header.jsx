@@ -223,7 +223,7 @@ const Header = () => {
           <div className="hidden min-w-0 flex-1 items-center justify-center gap-5 md:flex">
             <div className="relative w-full max-w-[560px]">
               <form onSubmit={handleSearch} className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-5 flex items-center">
+                <div className="pointer-events-none absolute inset-y-0 left-5 z-10 flex items-center">
                   <svg
                     className="h-5 w-5 text-sky-500"
                     fill="none"
@@ -305,17 +305,18 @@ const Header = () => {
               )}
             </div>
 
-            <nav className="hidden shrink-0 items-center gap-2 rounded-full border border-white/70 bg-white/45 p-1 shadow-sm backdrop-blur lg:flex">
+            <nav className="hidden shrink-0 ml-10 pl-3 pr-3 items-center gap-2 rounded-full border border-white/80 bg-white/80 p-1 shadow-lg shadow-sky-200/50 backdrop-blur lg:flex">
               <Link
                 to="/events"
-                className="rounded-full px-5 py-2.5 text-sm font-black text-gray-600 transition hover:bg-white hover:text-[#0369A1] hover:shadow-sm"
+                className="rounded-full ml-2 mr-5 bg-gradient-to-r from-sky-200 via-cyan-200 to-emerald-200 px-5 py-2.5 text-sm font-black text-[#0369A1] shadow-md shadow-sky-200/50 transition hover:-translate-y-0.5 hover:from-sky-200 hover:via-cyan-200 hover:to-emerald-200 hover:text-sky-800 hover:shadow-lg"
+
               >
                 행사 목록
               </Link>
 
               <Link
                 to="/recommend"
-                className="rounded-full bg-gradient-to-r from-sky-500 to-cyan-400 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-sky-300/35 transition hover:-translate-y-0.5 hover:shadow-xl"
+                className="rounded-full mr-2 bg-gradient-to-r from-sky-500 to-cyan-400 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-sky-300/35 transition hover:-translate-y-0.5 hover:shadow-xl"
               >
                 AI 여행 코스
               </Link>
@@ -343,7 +344,7 @@ const Header = () => {
             <button
               type="button"
               onClick={handleNotificationClick}
-              className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/55 text-gray-600 shadow-sm transition hover:bg-white hover:text-[#0369A1] active:scale-95"
+              className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-sky-100/85 text-gray-700 shadow-lg shadow-sky-200/60 transition hover:bg-white hover:text-[#0369A1] hover:shadow-xl active:scale-95"
               aria-label="알림"
             >
               <svg

@@ -105,8 +105,8 @@
 .map-region {
   cursor: pointer;
   fill: transparent;
-  stroke: transparent;
-  stroke-width: 0;
+  stroke: white;
+  stroke-width: 6;
   transform-box: fill-box;
   transform-origin: center;
   transition:

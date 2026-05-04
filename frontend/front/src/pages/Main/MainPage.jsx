@@ -144,11 +144,11 @@ const MainPage = () => {
           <section className="max-w-[1440px] mx-auto mb-16 relative">
             <div className="flex justify-between items-end mb-8 px-4">
               <div>
-                <p className="mb-2 text-[11px] font-black uppercase tracking-[0.24em] text-sky-600">
-                  Festival Hot Picks
+                <p className="mb-2 text-[15px] font-black uppercase tracking-[0.24em] text-sky-600">
+                  🔥 Festival Hot Picks
                 </p>
                 <h2 className="text-2xl font-black text-[#0369A1] md:text-3xl">
-                  지금 가장 뜨거운 축제 TOP 10
+                지금 가장 뜨거운 축제 TOP 10
                 </h2>
               </div>
 
