@@ -85,6 +85,8 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('로그아웃 에러:', error);
     } finally {
+      localStorage.removeItem('last_recommend_result');
+      localStorage.removeItem('last_recommend_inputs');
       setUser(null);
     }
   };

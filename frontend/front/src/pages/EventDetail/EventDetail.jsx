@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import api from "./../../api";
 import { useAuth } from "../../contexts/AuthContext";
 import LoginRequiredModal from "../../components/LoginRequiredModal";
@@ -9,6 +9,7 @@ const EventDetail = () => {
   const { id } = useParams();
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isLoggedIn, authLoading } = useAuth();
 
   const [event, setEvent] = useState(null);
@@ -617,7 +618,9 @@ const EventDetail = () => {
         onClose={() => setLoginModalOpen(false)}
         onLogin={() => {
           setLoginModalOpen(false);
-          navigate("/login");
+          navigate("/login", {
+            state: { from: location.pathname + location.search },
+          });
         }}
       />
 

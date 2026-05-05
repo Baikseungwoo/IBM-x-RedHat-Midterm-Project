@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../api';
 import LoginRequiredModal from '../../components/LoginRequiredModal';
 import SuccessModal from '../../components/SuccessModal';
@@ -39,6 +39,7 @@ const getStatusClassName = (status) => {
 
 const AdminInquiryPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [inquiries, setInquiries] = useState([]);
   const [replyValues, setReplyValues] = useState({});
@@ -371,7 +372,9 @@ const AdminInquiryPage = () => {
         onClose={() => setLoginModalOpen(false)}
         onLogin={() => {
           setLoginModalOpen(false);
-          navigate('/login');
+          navigate('/login', {
+            state: { from: location.pathname + location.search },
+          });
         }}
       />
 

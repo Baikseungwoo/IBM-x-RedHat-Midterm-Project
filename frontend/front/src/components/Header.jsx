@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api';
 import LoginRequiredModal from './LoginRequiredModal';
@@ -29,6 +29,7 @@ const Header = () => {
   const [notificationToastOpen, setNotificationToastOpen] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isLoggedIn, logout } = useAuth();
   const unreadCount = notifications.filter((notification) => !notification.is_read).length;
 
@@ -447,7 +448,9 @@ const Header = () => {
         onClose={() => setLoginModalOpen(false)}
         onLogin={() => {
           setLoginModalOpen(false);
-          navigate('/login');
+          navigate('/login', {
+            state: { from: location.pathname + location.search },
+          });
         }}
       />
 

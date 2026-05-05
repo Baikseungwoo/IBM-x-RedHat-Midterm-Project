@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import SuccessModal from '../../components/SuccessModal';
+import { validateNickname } from '../../utils/validateNickname';
 
 
 const SignUp = () => {
@@ -71,12 +72,20 @@ const SignUp = () => {
     const [emailError, setEmailError] = useState("");
     const [passwordError, setPasswordError] = useState("");
     const [confirmPasswordError, setConfirmPasswordError] = useState("");
+    const [nicknameError, setNicknameError] = useState("");
 
 
     const handleNicknameCheck = async ()=>{
-        if (!nickname) return alert("닉네임을 입력해주세요."); 
+        const errorMessage = validateNickname(nickname);
+        setNicknameError(errorMessage);
+
+        if (errorMessage) {
+            alert(errorMessage);
+            return;
+        }
+
         try{
-            const isDuplicated = await checkNickname(nickname)
+            const isDuplicated = await checkNickname(nickname.trim())
             if (isDuplicated){
                 alert("이미 사용중인 닉네임입니다.");
             } else{
@@ -110,7 +119,10 @@ const SignUp = () => {
     const handleSignup = async (e) => {
         e.preventDefault();
 
-        if (emailError || passwordError || confirmPasswordError) {
+        const nicknameErrorMessage = validateNickname(nickname);
+        setNicknameError(nicknameErrorMessage);
+
+        if (emailError || passwordError || confirmPasswordError || nicknameErrorMessage) {
             alert("입력 형식을 확인해주세요.");
             return;
         }
@@ -136,7 +148,7 @@ const SignUp = () => {
         }
 
         try {
-            await signup({ email, password, nickname, image_data: "" });
+            await signup({ email, password, nickname: nickname.trim(), image_data: "" });
             setSuccessModalOpen(true);
         } catch (error) {
             alert("회원가입에 실패했습니다.");
@@ -156,11 +168,15 @@ const SignUp = () => {
                             <input 
                                 type='text'
                                 placeholder='닉네임을 입력해주세요' 
-                                className="w-full pl-12 pr-28 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all shadow-inner"
+                                className={`w-full pl-12 pr-28 py-4 bg-gray-50 border ${
+                                    nicknameError ? "border-red-400" : "border-gray-100"
+                                } rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all shadow-inner`}
                                 value={nickname} 
                                 onChange={(e) => {
-                                    setNickname(e.target.value);
+                                    const value = e.target.value;
+                                    setNickname(value);
                                     setNicknameCheck(false);
+                                    setNicknameError(value ? validateNickname(value) : "");
                                 }}
                                 required
                             />
@@ -172,6 +188,11 @@ const SignUp = () => {
                                 중복확인
                             </button>
                         </div>
+                        {nicknameError && (
+                            <p className="text-red-500 text-xs mt-2 ml-2 font-medium">
+                                {nicknameError}
+                            </p>
+                        )}
 
                         <div className="relative flex items-center">
                             <span className="absolute left-5 text-lg">📧</span>

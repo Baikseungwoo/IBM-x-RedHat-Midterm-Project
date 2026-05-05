@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../api';
 import { KOREA_MAP_DATA } from '../../constants/mapData';
 import EventCard from '../../components/EventCard';
-import { useNavigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import BookmarkToast from '../../components/BookmarkToast';
 import { useAuth } from '../../contexts/AuthContext';
 import LoginRequiredModal from '../../components/LoginRequiredModal';
@@ -10,6 +10,7 @@ import LoginRequiredModal from '../../components/LoginRequiredModal';
 const MainPage = () => {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [topEvents, setTopEvents] = useState([]);
@@ -222,8 +223,8 @@ const MainPage = () => {
             </div>
           </section>
 
-          <section className="max-w-[1500px] mx-auto grid grid-cols-1 xl:grid-cols-[minmax(360px,460px)_minmax(0,1fr)] items-start gap-10 xl:gap-14 px-4">
-            <div className="w-full xl:sticky xl:top-10">
+          <section className="max-w-[1400px] mx-auto grid grid-cols-1 xl:grid-cols-[minmax(400px,500px)_minmax(0,840px)] items-center justify-center gap-10 xl:gap-14 px-4">
+            <div className="w-full">
               <div className="mb-8 md:mb-10 pl-0 sm:pl-4">
                 
 
@@ -308,8 +309,8 @@ const MainPage = () => {
               </div>
             </div>
 
-            <div className="w-full min-w-0 flex justify-center items-start xl:items-center py-4 xl:py-10">
-              <div className="relative w-full max-w-[min(920px,92vw)] xl:max-w-[min(920px,100%)] aspect-[1488/1760]">
+            <div className="w-full min-w-0 flex justify-center items-center py-4">
+              <div className="relative w-full max-w-[min(760px,92vw)] xl:max-w-[760px] aspect-[1488/1760]">
                 <div className="pointer-events-none absolute left-1/2 top-[46%] h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/30 blur-3xl" />
                 <div className="pointer-events-none absolute right-[8%] top-[12%] h-28 w-28 rounded-full bg-yellow-200/60 blur-2xl" />
 
@@ -349,7 +350,9 @@ const MainPage = () => {
         onClose={() => setLoginModalOpen(false)}
         onLogin={() => {
           setLoginModalOpen(false);
-          navigate('/login');
+          navigate('/login', {
+            state: { from: location.pathname + location.search },
+          });
         }}
       />
     </>

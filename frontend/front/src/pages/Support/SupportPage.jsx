@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../api';
 import LoginRequiredModal from '../../components/LoginRequiredModal';
 import SuccessModal from '../../components/SuccessModal';
@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const SupportPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isLoggedIn } = useAuth();
 
   const [title, setTitle] = useState('');
@@ -125,7 +126,9 @@ const SupportPage = () => {
         onClose={() => setLoginModalOpen(false)}
         onLogin={() => {
           setLoginModalOpen(false);
-          navigate('/login');
+          navigate('/login', {
+            state: { from: location.pathname + location.search },
+          });
         }}
       />
 

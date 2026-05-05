@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import App from './../../App';
 import SuccessModal from '../../components/SuccessModal';
@@ -15,6 +15,8 @@ const LoginPage = () => {
 
     
     const navigate = useNavigate();
+    const location = useLocation();
+    const redirectPath = location.state?.from || '/';
 
     const {login} = useAuth();
     
@@ -120,11 +122,11 @@ const LoginPage = () => {
             <SuccessModal
                 open={successModalOpen}
                 title="로그인 성공"
-                message="환영합니다. 메인 페이지로 이동합니다."
+                message="환영합니다. 이전 페이지로 이동합니다."
                 buttonText="시작하기"
                 onConfirm={() => {
                     setSuccessModalOpen(false);
-                    navigate('/');
+                    navigate(redirectPath, { replace: true });
                 }}
             />
         </>

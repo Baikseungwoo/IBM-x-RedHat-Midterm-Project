@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import api from "../../api";
 import EventCard from "../../components/EventCard";
 import BookmarkToast from "../../components/BookmarkToast";
@@ -18,6 +18,7 @@ const EventList = () => {
   const [bookmarkToastState, setBookmarkToastState] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
 
   const urlKeyword = searchParams.get("keyword") || "";
@@ -445,7 +446,9 @@ const EventList = () => {
         onClose={() => setLoginModalOpen(false)}
         onLogin={() => {
           setLoginModalOpen(false);
-          navigate("/login");
+          navigate("/login", {
+            state: { from: location.pathname + location.search },
+          });
         }}
       />
     </>

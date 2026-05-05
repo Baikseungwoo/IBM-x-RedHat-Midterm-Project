@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api';
 import Modal from '../../components/modal';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import LoginRequiredModal from '../../components/LoginRequiredModal';
 import RecommendErrorModal from '../../components/RecommendErrorModal';
@@ -24,7 +24,8 @@ const RecommendPage = () => {
   const [saveSuccessOpen, setSaveSuccessOpen] = useState(false);
 
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
+  const location = useLocation();
+  const { isLoggedIn, authLoading } = useAuth();
 
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState('');
@@ -49,6 +50,18 @@ const RecommendPage = () => {
   };
 
   useEffect(() => {
+    if (authLoading) return;
+
+    if (!isLoggedIn) {
+      localStorage.removeItem('last_recommend_result');
+      localStorage.removeItem('last_recommend_inputs');
+      setRecommendResult(null);
+      setSelectedRegion('');
+      setSelectedDate('');
+      setKeyword('');
+      return;
+    }
+
     const savedCourse = localStorage.getItem('last_recommend_result');
     const savedInputs = localStorage.getItem('last_recommend_inputs');
 
@@ -62,7 +75,7 @@ const RecommendPage = () => {
       setSelectedDate(date || '');
       setKeyword(keyword || '');
     }
-  }, []);
+  }, [authLoading, isLoggedIn]);
 
   const getAIRecommendation = async () => {
     if (!requireLogin()) return;
@@ -308,7 +321,9 @@ const RecommendPage = () => {
         onClose={() => setLoginModalOpen(false)}
         onLogin={() => {
           setLoginModalOpen(false);
-          navigate('/login');
+          navigate('/login', {
+            state: { from: location.pathname + location.search },
+          });
         }}
       />
 

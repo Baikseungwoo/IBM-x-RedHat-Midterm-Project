@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import api from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
+import { validateNickname } from '../../utils/validateNickname';
 
 const ProfileSection = ({ user, setUser }) => {
     const { checkEmail, checkNickname } = useAuth();
@@ -74,9 +75,14 @@ const ProfileSection = ({ user, setUser }) => {
             setNicknameMode("check");
             setNicknameMsg("");
         } else if (nicknameMode === "check") {
-            if (!user.nickname) return alert("닉네임을 입력해주세요.");
+            const errorMessage = validateNickname(user.nickname || "");
+            if (errorMessage) {
+                setNicknameMsg(errorMessage);
+                return;
+            }
+
             try {
-                const isDuplicated = await checkNickname(user.nickname);
+                const isDuplicated = await checkNickname(user.nickname.trim());
                 if (isDuplicated) {
                     setNicknameMsg("이미 사용중인 닉네임입니다.");
                 } else {
@@ -85,7 +91,17 @@ const ProfileSection = ({ user, setUser }) => {
                 }
             } catch (e) { alert("중복 확인 오류"); }
         } else if (nicknameMode === "save") {
-            const success = await updateProfileOnServer(user);
+            const errorMessage = validateNickname(user.nickname || "");
+            if (errorMessage) {
+                setNicknameMsg(errorMessage);
+                setNicknameMode("check");
+                return;
+            }
+
+            const success = await updateProfileOnServer({
+                ...user,
+                nickname: user.nickname.trim()
+            });
             if (success) {
                 alert("닉네임이 수정되었습니다.");
                 setNicknameMode("view");
@@ -171,6 +187,7 @@ const ProfileSection = ({ user, setUser }) => {
                                     onChange={(e) => {
                                         setUser({ ...user, nickname: e.target.value });
                                         setNicknameMode("check");
+                                        setNicknameMsg(e.target.value ? validateNickname(e.target.value) : "");
                                     }}  
                                     className="w-full bg-transparent border-b-2 border-blue-500 outline-none text-2xl font-bold py-1 text-gray-800"
                                 />

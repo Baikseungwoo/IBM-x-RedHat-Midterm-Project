@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../api';
 import LoginRequiredModal from '../../components/LoginRequiredModal';
 import { useAuth } from '../../contexts/AuthContext';
@@ -39,6 +39,7 @@ const getStatusClassName = (status) => {
 
 const InquiryHistoryPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isLoggedIn, authLoading } = useAuth();
 
   const [inquiries, setInquiries] = useState([]);
@@ -209,7 +210,9 @@ const InquiryHistoryPage = () => {
         onClose={() => setLoginModalOpen(false)}
         onLogin={() => {
           setLoginModalOpen(false);
-          navigate('/login');
+          navigate('/login', {
+            state: { from: location.pathname + location.search },
+          });
         }}
       />
     </>
