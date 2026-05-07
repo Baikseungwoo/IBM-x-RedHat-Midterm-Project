@@ -1,5 +1,54 @@
 # 🎉 프로젝트 GIUT
 
+## 프로젝트를 정상적으로 돌리시려면 네이버 맵을 사용할 수 있는 API키와 Openai에서 API키를 따로 발급받아서 넣어야합니다.
+---
+## 환경 변수 설정
+
+프로젝트 실행 전 백엔드와 프론트엔드에 각각 `.env` 파일을 생성해야 합니다.
+
+### 1. Backend 환경 변수 설정
+
+아래 경로에 `.env` 파일을 생성합니다.
+
+```bash
+/backend/.env
+```
+
+그리고 다음 내용을 추가합니다.
+
+```env
+DB_USER="root"
+DB_PASSWORD="DB 비밀번호"
+DB_HOST="localhost"
+DB_PORT="3306"
+DB_NAME="DB 스키마 이름"
+
+SECRET_KEY="SECRET_KEY"
+
+# 행사 공공 데이터 관련
+PUBLIC_API_BASE_URL="https://apis.data.go.kr/B551011/KorService2"
+PUBLIC_API_KEY="cf4ceef411f3f2aa9b9e7f2aff2113f863347e073cad27ff35fa7bcd91ff2f25"
+
+# OpenAI API 관련
+OPENAI_API_KEY="발급받은 openAI-key"
+OPENAI_MODEL="gpt-4o-mini"
+```
+
+### 2. Frontend 환경 변수 설정
+
+아래 경로에 `.env` 파일을 생성합니다.
+
+```bash
+/root/frontend/front/.env
+```
+
+그리고 다음 내용을 추가합니다.
+
+```env
+VITE_NAVER_MAP_CLIENT_ID="발급받은 Naver Map Client ID"
+```
+
+환경 변수 설정을 완료한 뒤 백엔드와 프론트엔드를 실행하면 됩니다.
 ---
 
 # 📌 프로젝트 개요
