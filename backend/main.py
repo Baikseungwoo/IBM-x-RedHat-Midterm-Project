@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 from zoneinfo import ZoneInfo
 
@@ -47,15 +48,15 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
 
     # 매일 새벽 3시에 공공데이터 동기화 실행
-    # scheduler.add_job(
-    #     daily_sync_job,
-    #     CronTrigger(hour=3, minute=0),
-    #     id="daily_event_sync",
-    #     replace_existing=True,
-    #     max_instances=1,
-    #     coalesce=True,
-    # )
-    # scheduler.start()
+    scheduler.add_job(
+        daily_sync_job,
+        CronTrigger(hour=3, minute=0),
+        id="daily_event_sync",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
+    scheduler.start()
 
     # 동기화 즉시실행
     # await daily_sync_job()
@@ -68,12 +69,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+cors_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+extra_cors_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=cors_origins + extra_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

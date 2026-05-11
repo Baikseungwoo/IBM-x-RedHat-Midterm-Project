@@ -1,7 +1,12 @@
 backend/.env
+/.env
+.env.*
+!.env.example
 
 # 파이썬 관련
 __pycache__/
 *.py[cod]
 *$py.class
 frontend/front/.env
+frontend/front/.env.*
+!frontend/front/.env.example

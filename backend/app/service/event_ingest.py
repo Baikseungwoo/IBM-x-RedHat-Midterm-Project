@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 import math
+import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
+import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.event import Event
 from app.db.models.event_detail import EventDetail
 from app.external.public.client import fetch_detail_intro, fetch_festival_page
+
+logger = logging.getLogger(__name__)
 
 
 ALL_AREA_CODES = {
@@ -219,10 +223,19 @@ async def sync_events_service(
         event_saved += 1
 
         # event 유효할 때만 detail 조회
-        detail_item = await fetch_detail_intro(
-            content_id=content_id,
-            content_type_id=event_row["content_type_id"],
-        )
+        try:
+            detail_item = await fetch_detail_intro(
+                content_id=content_id,
+                content_type_id=event_row["content_type_id"],
+            )
+        except (httpx.HTTPError, RuntimeError) as exc:
+            logger.warning(
+                "event detail fetch skipped: content_id=%s, content_type_id=%s, error=%s",
+                content_id,
+                event_row["content_type_id"],
+                exc,
+            )
+            continue
         if detail_item is None:
             continue
 
