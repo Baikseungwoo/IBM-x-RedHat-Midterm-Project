@@ -29,15 +29,17 @@ from app.service.event_ingest import sync_recent_and_upcoming_events_service
 
 load_dotenv(dotenv_path=".env")
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler(timezone=ZoneInfo("Asia/Seoul"))
 
 
 async def daily_sync_job() -> None:
+    logger.warning("daily sync started")
     async with AsyncSessionLocal() as session:
         try:
             result = await sync_recent_and_upcoming_events_service(db=session, size=100)
-            logger.info("daily sync done: %s", result)
+            logger.warning("daily sync done: %s", result)
         except Exception:
             logger.exception("daily sync failed")
 
@@ -57,6 +59,7 @@ async def lifespan(app: FastAPI):
         coalesce=True,
     )
     scheduler.start()
+    logger.warning("daily event sync scheduled: timezone=Asia/Seoul, cron=03:00")
 
     # 동기화 즉시실행
     # await daily_sync_job()
